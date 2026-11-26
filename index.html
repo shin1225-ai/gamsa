@@ -161,8 +161,11 @@ main.enter > *:nth-child(5) { animation-delay: .24s; }
 .hint { color: var(--muted); font-size: .82rem; margin: 0; }
 
 .glist { list-style: none; margin: 0; padding: 0; }
-.grow { display: grid; grid-template-columns: 1.7rem 1fr auto; align-items: center; border-bottom: 1px solid var(--rule); transition: border-color .3s; }
-.gnum { font-family: var(--display); color: var(--gold); font-size: 1.2rem; }
+.grow { display: grid; grid-template-columns: 1.7rem 1fr auto; align-items: start; border-bottom: 1px solid var(--rule); transition: border-color .3s; }
+.gnum { font-family: var(--display); color: var(--gold); font-size: 1.2rem; line-height: var(--line); }
+.grow .del { margin-top: .2rem; }
+.gtext { display: block; width: 100%; min-width: 0; border: 0; background: transparent; resize: none; overflow: hidden; padding: .45rem 0; line-height: 1.6; min-height: var(--line); }
+.gtext:focus { outline: none; }
 .line-input { width: 100%; min-width: 0; border: 0; background: transparent; height: var(--line); padding: 0; }
 .line-input:focus { outline: none; }
 .grow:focus-within { border-bottom-color: var(--gold); }
@@ -762,11 +765,11 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
     gItems.forEach((val, i) => {
       const li = document.createElement('li'); li.className = 'grow';
       const n = document.createElement('span'); n.className = 'gnum'; n.textContent = i + 1;
-      const inp = document.createElement('input');
-      inp.type = 'text'; inp.id = 'g' + i; inp.value = val; inp.maxLength = 300; inp.className = 'line-input';
+      const inp = document.createElement('textarea');
+      inp.rows = 1; inp.id = 'g' + i; inp.value = val; inp.maxLength = 300; inp.className = 'gtext';
       inp.placeholder = i === 0 ? t('gPh0') : t('gPh');
       inp.setAttribute('aria-label', t('gAria') + (i + 1));
-      inp.addEventListener('input', () => { gItems[i] = inp.value; changed(); updateCounts(); });
+      inp.addEventListener('input', () => { if (inp.value.includes('\n')) inp.value = inp.value.replace(/\n+/g, ' '); gItems[i] = inp.value; fitText(inp); changed(); updateCounts(); });
       inp.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter' && !ev.isComposing) {
           ev.preventDefault();
@@ -782,8 +785,12 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
         li.append(del);
       } else li.append(document.createElement('span'));
       ol.append(li);
+      fitText(inp);
     });
   }
+  // 감사 칸: 글이 길면 옆으로 밀리지 않고 아래로 줄이 바뀌며 칸이 늘어남
+  function fitText(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+  window.addEventListener('resize', () => document.querySelectorAll('.gtext').forEach(fitText));
 
   function updateCounts() {
     const n = gItems.filter((s) => s.trim()).length;
