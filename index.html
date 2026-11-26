@@ -3,8 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>감사 일기</title>
-<meta name="description" content="감사 세 가지와 일기, 할 일, 오늘의 말씀을 기록하는 무료 일기장. 기록은 내 기기에만 저장됩니다.">
+<title>감사일기 · 할 일 체크</title>
+<meta name="description" content="매일 감사 세 가지와 할 일, 오늘의 말씀. 무료·가입 없음, 기록은 내 기기에만 저장됩니다.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="감사일기">
+<meta property="og:title" content="감사일기 · 할 일 체크">
+<meta property="og:description" content="매일 감사 세 가지와 할 일, 오늘의 말씀. 무료·가입 없음">
+<meta property="og:url" content="https://shin1225-ai.github.io/gamsa/">
+<meta property="og:image" content="https://shin1225-ai.github.io/gamsa/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a2928">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -90,7 +99,8 @@ h2 { font-family: var(--serif); font-weight: 400; font-size: 1.35rem; margin: 0;
   padding-left: max(22px, env(safe-area-inset-left, 0px)); padding-right: max(22px, env(safe-area-inset-right, 0px));
   min-height: 330px; display: flex; flex-direction: column; justify-content: space-between; }
 .toprow { display: flex; justify-content: space-between; align-items: center; }
-.brand { font-family: var(--serif); font-size: .95rem; color: var(--muted); }
+.brand { font-family: var(--serif); font-size: .95rem; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
+.mine { font-family: var(--sans); font-size: .7rem; font-weight: 600; color: var(--night-deep); background: var(--gold); border-radius: 999px; padding: 2px 9px; letter-spacing: .02em; }
 .lang { display: flex; gap: 2px; font-size: .8rem; }
 .lang button { padding: 4px 9px; border-radius: 999px; color: var(--muted); }
 .lang button[aria-pressed="true"] { color: var(--night-deep); background: var(--cream); font-weight: 600; }
@@ -294,7 +304,7 @@ main.enter > *:nth-child(5) { animation-delay: .24s; }
   <span class="spark twinkle" style="right:12%;bottom:28%;width:14px;height:14px" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c.8 6.5 5.5 11.2 12 12-6.5.8-11.2 5.5-12 12-.8-6.5-5.5-11.2-12-12C6.5 11.2 11.2 6.5 12 0Z"/></svg></span>
   <div class="hero-inner">
     <div class="toprow">
-      <span class="brand" data-t="appName">감사 일기</span>
+      <span class="brand"><span data-t="appName">감사 일기</span></span>
       <div class="lang" role="group" aria-label="Language">
         <button id="lang-ko" aria-pressed="true">한</button>
         <button id="lang-en" aria-pressed="false">EN</button>
@@ -453,7 +463,7 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
   // ---------- 언어 ----------
   const T = {
     ko: {
-      appName: '감사 일기', tabWrite: '쓰기', tabTodo: '할 일', tabCal: '달력', tabList: '모아보기', skip: '건너뛰기',
+      appName: '감사 일기', mine: '내 일기장', tabWrite: '쓰기', tabTodo: '할 일', tabCal: '달력', tabList: '모아보기', skip: '건너뛰기',
       introL1: '감사의', introL2: '하루',
       prevDay: '전날', nextDay: '다음날', goToday: '오늘로', prevMonth: '이전 달', nextMonth: '다음 달',
       relToday: '오늘', relYest: '어제', relTom: '내일', relPast: '일 전', relFut: '일 후',
@@ -492,7 +502,7 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
       bkNow: '지금 백업하기', bkLater: '나중에', bkLast: (d) => '마지막 백업: ' + d, bkNone: '아직 백업한 적이 없어요.',
     },
     en: {
-      appName: 'Gratitude Journal', tabWrite: 'Write', tabTodo: 'To-do', tabCal: 'Calendar', tabList: 'Archive', skip: 'Skip',
+      appName: 'Gratitude Journal', mine: 'My journal', tabWrite: 'Write', tabTodo: 'To-do', tabCal: 'Calendar', tabList: 'Archive', skip: 'Skip',
       introL1: 'Grateful', introL2: 'Days',
       prevDay: 'Previous day', nextDay: 'Next day', goToday: 'Today', prevMonth: 'Previous month', nextMonth: 'Next month',
       relToday: 'Today', relYest: 'Yesterday', relTom: 'Tomorrow', relPast: ' days ago', relFut: ' days ahead',

@@ -1,5 +1,7 @@
 # 감사 일기 (Open Gratitude Journal)
 
+👉 **https://shin1225-ai.github.io/gamsa/**
+
 누구나 무료로 쓰는 감사 일기장입니다. 회원가입이 없고, 기록은 **내 기기의 브라우저에만** 저장됩니다.
 
 ## 할 수 있는 것
@@ -33,5 +35,6 @@
 |------|------|
 | `index.html` | 앱 전체 (이 파일 하나로 동작) |
 | `verses.json` | 말씀 50구절 목록 (참고용, 앱 안에도 들어 있음) |
+| `og.jpg` | 카카오톡 등에서 링크를 보낼 때 뜨는 미리보기 그림 |
 | `jesus.jpg` | 첫 화면·머리 그림 (호프만, 저작권 만료) |
 | `manifest.webmanifest`, `icon*.png`, `icon.svg` | 홈 화면 아이콘 |
