@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>감사 일기</title>
+<meta name="description" content="감사 세 가지와 일기, 할 일, 오늘의 말씀을 기록하는 무료 일기장. 기록은 내 기기에만 저장됩니다.">
+<meta name="theme-color" content="#f4f5f1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="감사 일기">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* 레이아웃: 일력 한 장. 왼쪽 정렬 한 기둥(최대 600px), 상자 없이 여백과 줄로 구분. 맨 위 큰 날짜, 아래 고정 탭 막대. */
+:root {
+  --paper: #f4f5f1;
+  --ink: #1f2733;
+  --muted: #687064;
+  --rule: #d8dbd2;
+  --olive: #56682a;
+  --olive-soft: #e3e8d4;
+  --warn: #a0442c;
+  --serif: "Gowun Batang", "Nanum Myeongjo", "AppleMyungjo", Georgia, serif;
+  --sans: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --line: 2.1rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151819; --ink: #e6e8e3; --muted: #9aa197; --rule: #2c3131;
+    --olive: #a9bd6d; --olive-soft: #262d18; --warn: #e3997c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #151819; --ink: #e6e8e3; --muted: #9aa197; --rule: #2c3131;
+  --olive: #a9bd6d; --olive-soft: #262d18; --warn: #e3997c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+:root { padding-top: env(safe-area-inset-top, 0px); }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.65; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; border-radius: 4px; }
+h2 { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; margin: 0; letter-spacing: -0.01em; }
+
+.page {
+  max-width: 600px; margin: 0 auto;
+  padding-block: 28px calc(96px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+
+/* 머리: 큰 날짜 */
+.masthead { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 4px 16px; }
+.daynum { font-family: var(--serif); font-weight: 700; font-size: 4.6rem; line-height: 0.82; letter-spacing: -0.04em; font-variant-numeric: lining-nums; }
+.daymeta { display: flex; flex-direction: column; padding-bottom: 4px; min-width: 0; }
+.daymeta .ym { color: var(--muted); font-size: 0.9rem; }
+.daymeta .wd { font-family: var(--serif); font-size: 1.25rem; line-height: 1.2; }
+.daymeta .rel { color: var(--olive); font-size: 0.82rem; font-weight: 600; }
+.lang { align-self: start; display: flex; gap: 2px; font-size: 0.8rem; }
+.lang button { padding: 4px 8px; border-radius: 6px; color: var(--muted); }
+.lang button[aria-pressed="true"] { color: var(--ink); background: var(--olive-soft); font-weight: 600; }
+.daynav { display: flex; gap: 6px; margin-top: 14px; align-items: center; }
+.navbtn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--rule); display: grid; place-items: center; color: var(--ink); }
+.navbtn:disabled { opacity: 0.3; }
+.navbtn svg { width: 16px; height: 16px; }
+.textbtn { color: var(--olive); font-size: 0.88rem; font-weight: 500; padding: 6px 4px; }
+.textbtn:disabled { color: var(--muted); opacity: 0.6; }
+
+/* 이번 주 기록 */
+.week { margin-top: 22px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-block: 12px; border-block: 1px solid var(--rule); }
+.dots { display: flex; gap: 6px; }
+.dots span { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--rule); }
+.dots span.on { background: var(--olive); border-color: var(--olive); }
+.dots span.today { outline: 1.5px solid var(--ink); outline-offset: 2px; }
+.week .streak { font-size: 0.9rem; }
+.week .streak b { font-family: var(--serif); font-size: 1.15rem; }
+.week .tot { color: var(--muted); font-size: 0.82rem; margin-left: auto; }
+
+.banner { margin-top: 16px; font-size: 0.85rem; color: var(--muted); padding-left: 12px; border-left: 2px solid var(--olive); }
+.remind { margin-top: 16px; width: 100%; text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--olive-soft); }
+.remind .r1 { font-size: 0.92rem; font-weight: 500; }
+.remind .r2 { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+
+/* 본문 블록 */
+.block { margin-top: 36px; display: flex; flex-direction: column; gap: 10px; }
+.bhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.count { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.count.done { color: var(--olive); font-weight: 600; }
+.hint { color: var(--muted); font-size: 0.82rem; margin: 0; }
+
+.glist { list-style: none; margin: 0; padding: 0; }
+.grow { display: grid; grid-template-columns: 1.6rem 1fr auto; align-items: center; border-bottom: 1px solid var(--rule); }
+.gnum { font-family: var(--serif); color: var(--olive); font-weight: 700; }
+.line-input { width: 100%; min-width: 0; border: 0; background: transparent; height: var(--line); padding: 0; }
+.line-input:focus { outline: none; }
+.grow:focus-within { border-bottom-color: var(--olive); }
+.del { width: 30px; height: 30px; color: var(--muted); font-size: 1.1rem; border-radius: 50%; }
+.addline { align-self: flex-start; color: var(--olive); font-size: 0.88rem; font-weight: 500; padding: 4px 0; }
+
+.ruled {
+  width: 100%; min-height: calc(var(--line) * 7); resize: vertical; border: 0; padding: 0;
+  line-height: var(--line); background-color: transparent;
+  background-image: linear-gradient(to bottom, transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px));
+  background-size: 100% var(--line); background-attachment: local;
+}
+.ruled:focus { outline: none; }
+
+.saveline { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 0.82rem; color: var(--muted); }
+.saveline .err { color: var(--warn); }
+.btn { border-radius: 999px; padding: 9px 18px; font-weight: 600; font-size: 0.9rem; background: var(--ink); color: var(--paper); }
+.btn:disabled { opacity: 0.45; }
+.btn.quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); font-weight: 500; }
+
+/* 말씀: 이 페이지에서 유일하게 크게 쓰는 곳 */
+.verse { margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 14px; }
+.vemo { color: var(--olive); font-size: 0.85rem; font-weight: 600; }
+.vmain { font-family: var(--serif); font-size: 1.5rem; line-height: 1.6; margin: 0; letter-spacing: -0.01em; text-wrap: pretty; }
+.vref { font-size: 0.88rem; color: var(--muted); margin: 0; }
+.vref b { color: var(--ink); font-weight: 600; }
+.vsub { font-family: var(--serif); font-size: 1rem; color: var(--muted); margin: 0; line-height: 1.7; }
+.vmsg { margin: 4px 0 0; font-size: 0.95rem; line-height: 1.75; white-space: pre-wrap; }
+.vlink { color: var(--muted); font-size: 0.8rem; text-underline-offset: 3px; }
+.vactions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* 할 일 */
+.tlist { list-style: none; margin: 0; padding: 0; }
+.trow { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-height: var(--line); border-bottom: 1px solid var(--rule); }
+.check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--muted); display: grid; place-items: center; }
+.check svg { width: 12px; height: 12px; opacity: 0; color: var(--paper); }
+.check[aria-checked="true"] { background: var(--olive); border-color: var(--olive); }
+.check[aria-checked="true"] svg { opacity: 1; }
+.ttext { min-width: 0; overflow-wrap: anywhere; padding-block: 6px; cursor: pointer; }
+.trow.done .ttext { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--rule); }
+.tform { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; border-bottom: 1px solid var(--ink); }
+.tform input[type="date"] { border: 0; background: transparent; color: var(--muted); font-size: 0.85rem; max-width: 9.5rem; min-width: 0; }
+.tform .plus { width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 1.2rem; line-height: 1; }
+.progress { height: 3px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--olive); }
+.tools { display: flex; gap: 16px; flex-wrap: wrap; }
+.upgroup { margin-top: 6px; }
+.uphead { width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 14px; text-align: left; }
+.uphead span:first-child { font-family: var(--serif); font-weight: 700; }
+.dday { font-size: 0.78rem; font-weight: 600; color: var(--olive); background: var(--olive-soft); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+
+/* 달력 */
+.calhead { display: flex; align-items: center; gap: 10px; }
+.calhead .label { flex: 1; font-family: var(--serif); font-size: 1.4rem; font-weight: 700; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px; }
+.cal .dow { text-align: center; font-size: 0.75rem; color: var(--muted); padding-bottom: 6px; }
+.cal .dow.sun { color: var(--warn); }
+.day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 50%; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+.day.empty { visibility: hidden; }
+.day .n { width: 2.1em; height: 2.1em; border-radius: 50%; display: grid; place-items: center; }
+.day.full .n { background: var(--olive); color: var(--paper); }
+.day.partial .n { background: var(--olive-soft); }
+.day.today .n { box-shadow: 0 0 0 1.5px var(--ink); }
+.day .marks { height: 5px; display: flex; gap: 3px; }
+.day .marks i { width: 5px; height: 5px; border-radius: 50%; border: 1px solid var(--muted); }
+.day .marks i.all { background: var(--muted); }
+.day.future { color: var(--muted); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+/* 모아보기 */
+.search { width: 100%; border: 0; border-bottom: 1px solid var(--ink); background: transparent; height: var(--line); padding: 0; }
+.search:focus { outline: none; }
+.entry { width: 100%; text-align: left; padding-block: 18px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 6px; }
+.entry .d { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.entry .d strong { font-family: var(--serif); font-weight: 700; font-size: 1.05rem; }
+.entry .d span { color: var(--muted); font-size: 0.8rem; }
+.entry ol { margin: 0; padding-left: 1.2em; }
+.entry ol li::marker { color: var(--olive); font-family: var(--serif); font-weight: 700; }
+.entry p { margin: 0; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.entry .vtag { font-family: var(--serif); font-size: 0.85rem; color: var(--olive); }
+.recall { font-family: var(--serif); font-size: 1.05rem; line-height: 1.7; margin: 0; }
+.recall small { display: block; font-family: var(--sans); color: var(--muted); font-size: 0.8rem; }
+.empty { color: var(--muted); padding: 32px 0; margin: 0; }
+
+/* 아래 탭 막대 */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--paper); border-top: 1px solid var(--rule);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+.tabbar .inner { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+.tabbar button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 0 8px; color: var(--muted); font-size: 0.72rem; position: relative; }
+.tabbar svg { width: 22px; height: 22px; }
+.tabbar button[aria-selected="true"] { color: var(--ink); font-weight: 600; }
+.tabbar button[aria-selected="true"]::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; background: var(--olive); }
+.badge { position: absolute; top: 5px; left: calc(50% + 6px); min-width: 16px; height: 16px; border-radius: 8px; background: var(--olive); color: var(--paper); font-size: 0.65rem; display: grid; place-items: center; padding: 0 4px; font-weight: 600; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .check, .progress i, .day .n { transition: background .2s, width .35s; }
+  .verse.fresh { animation: rise .5s ease-out; }
+  @keyframes rise { from { opacity: .3; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+@media (min-width: 560px) { .daynum { font-size: 5.6rem; } .vmain { font-size: 1.65rem; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="masthead">
+    <div class="daynum" id="dayNum">26</div>
+    <div class="daymeta">
+      <span class="rel" id="dayRel"></span>
+      <span class="wd" id="dayWd"></span>
+      <span class="ym" id="dayYm"></span>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button id="lang-ko" aria-pressed="true">한</button>
+      <button id="lang-en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+  <div class="daynav" id="dayNav">
+    <button class="navbtn" id="prevDay" data-ta="prevDay" aria-label="전날"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg></button>
+    <button class="navbtn" id="nextDay" data-ta="nextDay" aria-label="다음날"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 3 5 5-5 5"/></svg></button>
+    <button class="textbtn" id="goToday" data-t="goToday" hidden>오늘로</button>
+  </div>
+
+  <div class="week" id="weekRow">
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <span class="streak" id="streakText"></span>
+    <span class="tot" id="totText"></span>
+  </div>
+
+  <p class="banner" id="banner" hidden></p>
+
+  <!-- 쓰기 -->
+  <main id="view-write">
+    <button class="remind" id="remind" hidden><span class="r1" id="remind1"></span><span class="r2" id="remind2"></span></button>
+
+    <div class="block">
+      <div class="bhead"><h2 data-t="gTitle">오늘 감사한 일</h2><span class="count" id="gCount">0 / 3</span></div>
+      <ol class="glist" id="glist"></ol>
+      <button class="addline" id="addG" data-t="addG">+ 한 줄 더</button>
+    </div>
+
+    <div class="block">
+      <div class="bhead"><label for="diary"><h2 data-t="dTitle">오늘의 일기</h2></label><span class="count" id="dCount">0자</span></div>
+      <textarea id="diary" class="ruled" data-tp="dPh" placeholder="오늘 있었던 일과 마음을 적어 보세요."></textarea>
+    </div>
+
+    <div class="saveline">
+      <span id="saveState"></span>
+      <button class="btn quiet" id="saveNow" data-t="save">저장</button>
+    </div>
+
+    <section class="verse" id="verseSec" aria-labelledby="vTitle">
+      <h2 id="vTitle" data-t="vTitle">오늘의 말씀</h2>
+      <div id="verseBody" hidden style="display:flex;flex-direction:column;gap:12px"></div>
+      <p class="hint" id="verseHint"></p>
+      <div class="vactions">
+        <button class="btn" id="getVerse" data-t="vGet">말씀 받기</button>
+        <button class="btn quiet" id="otherVerse" data-t="vOther" hidden>다른 말씀</button>
+      </div>
+      <p class="hint" data-t="vNote"></p>
+    </section>
+  </main>
+
+  <!-- 할 일 -->
+  <main id="view-todo" hidden>
+    <div class="block">
+      <div class="bhead"><h2 id="tTitle"></h2><span class="count" id="tCount"></span></div>
+      <div class="progress" aria-hidden="true"><i id="tBar"></i></div>
+      <ul class="tlist" id="tlist"></ul>
+      <p class="hint" id="tEmpty" data-t="tEmpty">아직 할 일이 없어요.</p>
+      <form class="tform" id="tForm">
+        <input class="line-input" id="tInput" type="text" maxlength="200" data-tp="tPh" placeholder="할 일 적기" autocomplete="off" data-ta="tPh" aria-label="할 일">
+        <input type="date" id="tDate" data-ta="tDateLabel" aria-label="날짜">
+        <button class="plus" type="submit" data-ta="tAdd" aria-label="추가">+</button>
+      </form>
+      <p class="hint" id="tMsg"></p>
+      <div class="tools">
+        <button class="textbtn" id="carry" data-t="tCarry">어제 못 한 일 가져오기</button>
+        <button class="textbtn" id="clearDone" data-t="tClear">완료한 일 지우기</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="bhead"><h2 data-t="upTitle">다가오는 할 일</h2><span class="count" id="upCount"></span></div>
+      <div id="upList"></div>
+    </div>
+  </main>
+
+  <!-- 달력 -->
+  <main id="view-cal" hidden>
+    <div class="block">
+      <div class="calhead">
+        <span class="label" id="monthLabel"></span>
+        <button class="navbtn" id="prevMonth" data-ta="prevMonth" aria-label="이전 달"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg></button>
+        <button class="navbtn" id="nextMonth" data-ta="nextMonth" aria-label="다음 달"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 3 5 5-5 5"/></svg></button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="legend">
+        <span><i class="lg" style="background:var(--olive)"></i><span data-t="lgFull">감사 3개 + 일기</span></span>
+        <span><i class="lg" style="background:var(--olive-soft)"></i><span data-t="lgPart">일부</span></span>
+        <span><i class="lg" style="border:1px solid var(--muted);width:7px;height:7px"></i><span data-t="lgTodo">할 일</span></span>
+      </div>
+      <p class="hint" data-t="calHint">지난 날을 누르면 일기, 앞으로의 날을 누르면 할 일이 열립니다.</p>
+    </div>
+  </main>
+
+  <!-- 모아보기 -->
+  <main id="view-list" hidden>
+    <div class="block" id="recallBlock" hidden>
+      <p class="recall" id="recall"></p>
+    </div>
+    <div class="block">
+      <input class="search" id="search" type="search" data-tp="searchPh" placeholder="감사·일기·할 일 검색" data-ta="searchPh" aria-label="검색">
+      <div id="entries"></div>
+    </div>
+    <div class="block">
+      <div class="tools">
+        <button class="textbtn" id="exportTxt" data-t="exTxt">텍스트로 내보내기</button>
+        <button class="textbtn" id="exportJson" data-t="exJson">백업 파일 받기</button>
+        <button class="textbtn" id="importBtn" data-t="imJson">백업 불러오기</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="hint" id="exportMsg"></p>
+    </div>
+    <div class="block">
+      <p class="hint" data-t="about"></p>
+    </div>
+  </main>
+</div>
+
+<nav class="tabbar" role="tablist">
+  <div class="inner">
+    <button role="tab" aria-selected="true" data-view="write"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span data-t="tabWrite">쓰기</span></button>
+    <button role="tab" aria-selected="false" data-view="todo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="m8 12.2 2.7 2.7L16.2 9.5"/></svg><span data-t="tabTodo">할 일</span><span class="badge" id="todoBadge" hidden></span></button>
+    <button role="tab" aria-selected="false" data-view="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span data-t="tabCal">달력</span></button>
+    <button role="tab" aria-selected="false" data-view="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4.5h10.5A3.5 3.5 0 0 1 19 8v11.5H8.5A3.5 3.5 0 0 1 5 16V4.5Z"/><path d="M9 9h6M9 13h6"/></svg><span data-t="tabList">모아보기</span></button>
+  </div>
+</nav>
+
+<script>
+// 말씀 목록: 한글 = 대한성서공회 개역한글 원문(bskorea.or.kr, 저작재산권 보호기간 2011-12-31 소멸), 영어 = KJV(공개 데이터 2종 대조). 2026-11-26 확인.
+const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자에게 가까이 하시고 중심에 통회하는 자를 구원하시는도다","en":"The LORD is nigh unto them that are of a broken heart; and saveth such as be of a contrite spirit.","refKo":"시편 34:18","refEn":"Psalms 34:18","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=34&sec=18"},{"id":1,"emo":"슬픔","ko":"애통하는 자는 복이 있나니 저희가 위로를 받을 것임이요","en":"Blessed are they that mourn: for they shall be comforted.","refKo":"마태복음 5:4","refEn":"Matthew 5:4","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=mat&chap=5&sec=4"},{"id":2,"emo":"슬픔","ko":"상심한 자를 고치시며 저희 상처를 싸매시는도다","en":"He healeth the broken in heart, and bindeth up their wounds.","refKo":"시편 147:3","refEn":"Psalms 147:3","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=147&sec=3"},{"id":3,"emo":"슬픔","ko":"모든 눈물을 그 눈에서 씻기시매 다시 사망이 없고 애통하는 것이나 곡하는 것이나 아픈 것이 다시 있지 아니하리니 처음 것들이 다 지나갔음이러라","en":"And God shall wipe away all tears from their eyes; and there shall be no more death, neither sorrow, nor crying, neither shall there be any more pain: for the former things are passed away.","refKo":"요한계시록 21:4","refEn":"Revelation 21:4","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=rev&chap=21&sec=4"},{"id":4,"emo":"슬픔","ko":"그 노염은 잠간이요 그 은총은 평생이로다 저녁에는 울음이 기숙할찌라도 아침에는 기쁨이 오리로다","en":"For his anger endureth but a moment; in his favour is life: weeping may endure for a night, but joy cometh in the morning.","refKo":"시편 30:5","refEn":"Psalms 30:5","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=30&sec=5"},{"id":5,"emo":"걱정","ko":"아무 것도 염려하지 말고 오직 모든 일에 기도와 간구로, 너희 구할 것을 감사함으로 하나님께 아뢰라 그리하면 모든 지각에 뛰어난 하나님의 평강이 그리스도 예수 안에서 너희 마음과 생각을 지키시리라","en":"Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.","refKo":"빌립보서 4:6-7","refEn":"Philippians 4:6-7","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=php&chap=4&sec=6"},{"id":6,"emo":"걱정","ko":"그러므로 내일 일을 위하여 염려하지 말라 내일 일은 내일 염려할 것이요 한 날 괴로움은 그 날에 족하니라","en":"Take therefore no thought for the morrow: for the morrow shall take thought for the things of itself. Sufficient unto the day is the evil thereof.","refKo":"마태복음 6:34","refEn":"Matthew 6:34","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=mat&chap=6&sec=34"},{"id":7,"emo":"걱정","ko":"너희 염려를 다 주께 맡겨 버리라 이는 저가 너희를 권고하심이니라","en":"Casting all your care upon him; for he careth for you.","refKo":"베드로전서 5:7","refEn":"1 Peter 5:7","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=1pe&chap=5&sec=7"},{"id":8,"emo":"걱정","ko":"두려워 말라 내가 너와 함께 함이니라 놀라지 말라 나는 네 하나님이 됨이니라 내가 너를 굳세게 하리라 참으로 너를 도와 주리라 참으로 나의 의로운 오른손으로 너를 붙들리라","en":"Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee; yea, I will uphold thee with the right hand of my righteousness.","refKo":"이사야 41:10","refEn":"Isaiah 41:10","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=isa&chap=41&sec=10"},{"id":9,"emo":"걱정","ko":"네 짐을 여호와께 맡겨 버리라 너를 붙드시고 의인의 요동함을 영영히 허락지 아니하시리로다","en":"Cast thy burden upon the LORD, and he shall sustain thee: he shall never suffer the righteous to be moved.","refKo":"시편 55:22","refEn":"Psalms 55:22","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=55&sec=22"},{"id":10,"emo":"화남","ko":"분을 내어도 죄를 짓지 말며 해가 지도록 분을 품지 말고","en":"Be ye angry, and sin not: let not the sun go down upon your wrath:","refKo":"에베소서 4:26","refEn":"Ephesians 4:26","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=eph&chap=4&sec=26"},{"id":11,"emo":"화남","ko":"내 사랑하는 형제들아 너희가 알거니와 사람마다 듣기는 속히 하고 말하기는 더디 하며 성내기도 더디 하라 사람의 성내는 것이 하나님의 의를 이루지 못함이니라","en":"Wherefore, my beloved brethren, let every man be swift to hear, slow to speak, slow to wrath: For the wrath of man worketh not the righteousness of God.","refKo":"야고보서 1:19-20","refEn":"James 1:19-20","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=jas&chap=1&sec=19"},{"id":12,"emo":"화남","ko":"유순한 대답은 분노를 쉬게 하여도 과격한 말은 노를 격동하느니라","en":"A soft answer turneth away wrath: but grievous words stir up anger.","refKo":"잠언 15:1","refEn":"Proverbs 15:1","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=pro&chap=15&sec=1"},{"id":13,"emo":"화남","ko":"분을 그치고 노를 버리라 불평하여 말라 행악에 치우칠 뿐이라","en":"Cease from anger, and forsake wrath: fret not thyself in any wise to do evil.","refKo":"시편 37:8","refEn":"Psalms 37:8","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=37&sec=8"},{"id":14,"emo":"화남","ko":"누가 뉘게 혐의가 있거든 서로 용납하여 피차 용서하되 주께서 너희를 용서하신 것과 같이 너희도 그리하고","en":"Forbearing one another, and forgiving one another, if any man have a quarrel against any: even as Christ forgave you, so also do ye.","refKo":"골로새서 3:13","refEn":"Colossians 3:13","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=col&chap=3&sec=13"},{"id":15,"emo":"외로움","ko":"여호와 그가 네 앞서 행하시며 너와 함께하사 너를 떠나지 아니하시며 버리지 아니하시리니 너는 두려워 말라 놀라지 말라","en":"And the LORD, he it is that doth go before thee; he will be with thee, he will not fail thee, neither forsake thee: fear not, neither be dismayed.","refKo":"신명기 31:8","refEn":"Deuteronomy 31:8","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=deu&chap=31&sec=8"},{"id":16,"emo":"외로움","ko":"주여 나는 외롭고 괴롭사오니 내게 돌이키사 나를 긍휼히 여기소서","en":"Turn thee unto me, and have mercy upon me; for I am desolate and afflicted.","refKo":"시편 25:16","refEn":"Psalms 25:16","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=25&sec=16"},{"id":17,"emo":"외로움","ko":"내가 너희를 고아와 같이 버려두지 아니하고 너희에게로 오리라","en":"I will not leave you comfortless: I will come to you.","refKo":"요한복음 14:18","refEn":"John 14:18","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=jhn&chap=14&sec=18"},{"id":18,"emo":"외로움","ko":"네가 물 가운데로 지날 때에 내가 함께할 것이라 강을 건널 때에 물이 너를 침몰치 못할 것이며 네가 불 가운데로 행할 때에 타지도 아니할 것이요 불꽃이 너를 사르지도 못하리니","en":"When thou passest through the waters, I will be with thee; and through the rivers, they shall not overflow thee: when thou walkest through the fire, thou shalt not be burned; neither shall the flame kindle upon thee.","refKo":"이사야 43:2","refEn":"Isaiah 43:2","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=isa&chap=43&sec=2"},{"id":19,"emo":"외로움","ko":"내가 너희에게 분부한 모든 것을 가르쳐 지키게 하라 볼찌어다 내가 세상 끝날까지 너희와 항상 함께 있으리라 하시니라","en":"Teaching them to observe all things whatsoever I have commanded you: and, lo, I am with you alway, even unto the end of the world. Amen.","refKo":"마태복음 28:20","refEn":"Matthew 28:20","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=mat&chap=28&sec=20"},{"id":20,"emo":"지침","ko":"수고하고 무거운 짐진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라","en":"Come unto me, all ye that labour and are heavy laden, and I will give you rest.","refKo":"마태복음 11:28","refEn":"Matthew 11:28","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=mat&chap=11&sec=28"},{"id":21,"emo":"지침","ko":"오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리의 날개치며 올라감 같을 것이요 달음박질하여도 곤비치 아니하겠고 걸어가도 피곤치 아니하리로다","en":"But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.","refKo":"이사야 40:31","refEn":"Isaiah 40:31","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=isa&chap=40&sec=31"},{"id":22,"emo":"지침","ko":"내게 이르시기를 내 은혜가 네게 족하도다 이는 내 능력이 약한데서 온전하여짐이라 하신지라 이러므로 도리어 크게 기뻐함으로 나의 여러 약한 것들에 대하여 자랑하리니 이는 그리스도의 능력으로 내게 머물게 하려함이라","en":"And he said unto me, My grace is sufficient for thee: for my strength is made perfect in weakness. Most gladly therefore will I rather glory in my infirmities, that the power of Christ may rest upon me.","refKo":"고린도후서 12:9","refEn":"2 Corinthians 12:9","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=2co&chap=12&sec=9"},{"id":23,"emo":"지침","ko":"우리가 선을 행하되 낙심하지 말찌니 피곤하지 아니하면 때가 이르매 거두리라","en":"And let us not be weary in well doing: for in due season we shall reap, if we faint not.","refKo":"갈라디아서 6:9","refEn":"Galatians 6:9","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=gal&chap=6&sec=9"},{"id":24,"emo":"지침","ko":"여호와는 나의 목자시니 내가 부족함이 없으리로다 그가 나를 푸른 초장에 누이시며 쉴만한 물 가으로 인도하시는도다","en":"The LORD is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters.","refKo":"시편 23:1-2","refEn":"Psalms 23:1-2","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=23&sec=1"},{"id":25,"emo":"기쁨","ko":"이 날은 여호와의 정하신 것이라 이 날에 우리가 즐거워하고 기뻐하리로다","en":"This is the day which the LORD hath made; we will rejoice and be glad in it.","refKo":"시편 118:24","refEn":"Psalms 118:24","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=118&sec=24"},{"id":26,"emo":"기쁨","ko":"주 안에서 항상 기뻐하라 내가 다시 말하노니 기뻐하라","en":"Rejoice in the Lord alway: and again I say, Rejoice.","refKo":"빌립보서 4:4","refEn":"Philippians 4:4","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=php&chap=4&sec=4"},{"id":27,"emo":"기쁨","ko":"느헤미야가 또 이르기를 너희는 가서 살진 것을 먹고 단 것을 마시되 예비치 못한 자에게는 너희가 나누어 주라 이 날은 우리 주의 성일이니 근심하지 말라 여호와를 기뻐하는 것이 너희의 힘이니라 하고","en":"Then he said unto them, Go your way, eat the fat, and drink the sweet, and send portions unto them for whom nothing is prepared: for this day is holy unto our Lord: neither be ye sorry; for the joy of the LORD is your strength.","refKo":"느헤미야 8:10","refEn":"Nehemiah 8:10","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=neh&chap=8&sec=10"},{"id":28,"emo":"기쁨","ko":"주께서 생명의 길로 내게 보이시리니 주의 앞에는 기쁨이 충만하고 주의 우편에는 영원한 즐거움이 있나이다","en":"Thou wilt shew me the path of life: in thy presence is fulness of joy; at thy right hand there are pleasures for evermore.","refKo":"시편 16:11","refEn":"Psalms 16:11","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=16&sec=11"},{"id":29,"emo":"기쁨","ko":"소망 중에 즐거워하며 환난 중에 참으며 기도에 항상 힘쓰며","en":"Rejoicing in hope; patient in tribulation; continuing instant in prayer;","refKo":"로마서 12:12","refEn":"Romans 12:12","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=rom&chap=12&sec=12"},{"id":30,"emo":"감사","ko":"항상 기뻐하라 쉬지 말고 기도하라 범사에 감사하라 이는 그리스도 예수 안에서 너희를 향하신 하나님의 뜻이니라","en":"Rejoice evermore. Pray without ceasing. In every thing give thanks: for this is the will of God in Christ Jesus concerning you.","refKo":"데살로니가전서 5:16-18","refEn":"1 Thessalonians 5:16-18","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=1th&chap=5&sec=16"},{"id":31,"emo":"감사","ko":"여호와께 감사하라 그는 선하시며 그 인자하심이 영원함이로다","en":"O give thanks unto the LORD, for he is good: for his mercy endureth for ever.","refKo":"시편 107:1","refEn":"Psalms 107:1","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=107&sec=1"},{"id":32,"emo":"감사","ko":"그리스도의 평강이 너희 마음을 주장하게 하라 평강을 위하여 너희가 한 몸으로 부르심을 받았나니 또한 너희는 감사하는 자가 되라","en":"And let the peace of God rule in your hearts, to the which also ye are called in one body; and be ye thankful.","refKo":"골로새서 3:15","refEn":"Colossians 3:15","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=col&chap=3&sec=15"},{"id":33,"emo":"감사","ko":"내 영혼아 여호와를 송축하며 그 모든 은택을 잊지 말찌어다","en":"Bless the LORD, O my soul, and forget not all his benefits:","refKo":"시편 103:2","refEn":"Psalms 103:2","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=103&sec=2"},{"id":34,"emo":"감사","ko":"범사에 우리 주 예수 그리스도의 이름으로 항상 아버지 하나님께 감사하며","en":"Giving thanks always for all things unto God and the Father in the name of our Lord Jesus Christ;","refKo":"에베소서 5:20","refEn":"Ephesians 5:20","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=eph&chap=5&sec=20"},{"id":35,"emo":"후회","ko":"만일 우리가 우리 죄를 자백하면 저는 미쁘시고 의로우사 우리 죄를 사하시며 모든 불의에서 우리를 깨끗케 하실 것이요","en":"If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness.","refKo":"요한일서 1:9","refEn":"1 John 1:9","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=1jn&chap=1&sec=9"},{"id":36,"emo":"후회","ko":"여호와께서 말씀하시되 오라 우리가 서로 변론하자 너희 죄가 주홍 같을찌라도 눈과 같이 희어질 것이요 진홍 같이 붉을찌라도 양털 같이 되리라","en":"Come now, and let us reason together, saith the LORD: though your sins be as scarlet, they shall be as white as snow; though they be red like crimson, they shall be as wool.","refKo":"이사야 1:18","refEn":"Isaiah 1:18","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=isa&chap=1&sec=18"},{"id":37,"emo":"후회","ko":"그러므로 이제 그리스도 예수 안에 있는 자에게는 결코 정죄함이 없나니","en":"There is therefore now no condemnation to them which are in Christ Jesus, who walk not after the flesh, but after the Spirit.","refKo":"로마서 8:1","refEn":"Romans 8:1","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=rom&chap=8&sec=1"},{"id":38,"emo":"후회","ko":"여호와의 자비와 긍휼이 무궁하시므로 우리가 진멸되지 아니함이니이다 이것이 아침마다 새로우니 주의 성실이 크도소이다","en":"It is of the LORD’s mercies that we are not consumed, because his compassions fail not. They are new every morning: great is thy faithfulness.","refKo":"예레미야애가 3:22-23","refEn":"Lamentations 3:22-23","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=lam&chap=3&sec=22"},{"id":39,"emo":"후회","ko":"동이 서에서 먼 것 같이 우리 죄과를 우리에게서 멀리 옮기셨으며","en":"As far as the east is from the west, so far hath he removed our transgressions from us.","refKo":"시편 103:12","refEn":"Psalms 103:12","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=103&sec=12"},{"id":40,"emo":"두려움","ko":"내가 사망의 음침한 골짜기로 다닐찌라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라 주의 지팡이와 막대기가 나를 안위하시나이다","en":"Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.","refKo":"시편 23:4","refEn":"Psalms 23:4","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=23&sec=4"},{"id":41,"emo":"두려움","ko":"내가 네게 명한 것이 아니냐 마음을 강하게 하고 담대히 하라 두려워 말며 놀라지 말라 네가 어디로 가든지 네 하나님 여호와가 너와 함께 하느니라 하시니라","en":"Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest.","refKo":"여호수아 1:9","refEn":"Joshua 1:9","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=jos&chap=1&sec=9"},{"id":42,"emo":"두려움","ko":"평안을 너희에게 끼치노니 곧 나의 평안을 너희에게 주노라 내가 너희에게 주는 것은 세상이 주는 것 같지 아니하니라 너희는 마음에 근심도 말고 두려워하지도 말라","en":"Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid.","refKo":"요한복음 14:27","refEn":"John 14:27","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=jhn&chap=14&sec=27"},{"id":43,"emo":"두려움","ko":"내가 두려워하는 날에는 주를 의지하리이다","en":"What time I am afraid, I will trust in thee.","refKo":"시편 56:3","refEn":"Psalms 56:3","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=56&sec=3"},{"id":44,"emo":"두려움","ko":"이는 나 여호와 너의 하나님이 네 오른손을 붙들고 네게 이르기를 두려워 말라 내가 너를 도우리라 할 것임이니라","en":"For I the LORD thy God will hold thy right hand, saying unto thee, Fear not; I will help thee.","refKo":"이사야 41:13","refEn":"Isaiah 41:13","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=isa&chap=41&sec=13"},{"id":45,"emo":"소망","ko":"나 여호와가 말하노라 너희를 향한 나의 생각은 내가 아나니 재앙이 아니라 곧 평안이요 너희 장래에 소망을 주려하는 생각이라","en":"For I know the thoughts that I think toward you, saith the LORD, thoughts of peace, and not of evil, to give you an expected end.","refKo":"예레미야 29:11","refEn":"Jeremiah 29:11","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=jer&chap=29&sec=11"},{"id":46,"emo":"소망","ko":"우리가 알거니와 하나님을 사랑하는 자 곧 그 뜻대로 부르심을 입은 자들에게는 모든 것이 합력하여 선을 이루느니라","en":"And we know that all things work together for good to them that love God, to them who are the called according to his purpose.","refKo":"로마서 8:28","refEn":"Romans 8:28","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=rom&chap=8&sec=28"},{"id":47,"emo":"소망","ko":"소망의 하나님이 모든 기쁨과 평강을 믿음 안에서 너희에게 충만케 하사 성령의 능력으로 소망이 넘치게 하시기를 원하노라","en":"Now the God of hope fill you with all joy and peace in believing, that ye may abound in hope, through the power of the Holy Ghost.","refKo":"로마서 15:13","refEn":"Romans 15:13","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=rom&chap=15&sec=13"},{"id":48,"emo":"소망","ko":"내가 산을 향하여 눈을 들리라 나의 도움이 어디서 올꼬 나의 도움이 천지를 지으신 여호와에게서로다","en":"I will lift up mine eyes unto the hills, from whence cometh my help. My help cometh from the LORD, which made heaven and earth.","refKo":"시편 121:1-2","refEn":"Psalms 121:1-2","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=psa&chap=121&sec=1"},{"id":49,"emo":"소망","ko":"너는 마음을 다하여 여호와를 의뢰하고 네 명철을 의지하지 말라 너는 범사에 그를 인정하라 그리하면 네 길을 지도하시리라","en":"Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths.","refKo":"잠언 3:5-6","refEn":"Proverbs 3:5-6","url":"https://www.bskorea.or.kr/bible/korbibReadpage.php?version=HAN&book=pro&chap=3&sec=5"}];
+</script>
+<script>
+(() => {
+  const MIN = 3;
+  const $ = (id) => document.getElementById(id);
+  const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="m2.5 6.2 2.3 2.3 4.7-4.8"/></svg>';
+
+  // ---------- 언어 ----------
+  const T = {
+    ko: {
+      appName: '감사 일기', tabWrite: '쓰기', tabTodo: '할 일', tabCal: '달력', tabList: '모아보기',
+      prevDay: '전날', nextDay: '다음날', goToday: '오늘로', prevMonth: '이전 달', nextMonth: '다음 달',
+      relToday: '오늘', relYest: '어제', relTom: '내일', relPast: '일 전', relFut: '일 후',
+      streak: (n) => '연속 <b>' + n + '</b>일', tot: (g, d) => '감사 ' + g + '개, ' + d + '일 기록',
+      gTitle: '오늘 감사한 일', addG: '+ 한 줄 더', gPh0: '아침에 따뜻한 커피를 마실 수 있어서', gPh: '감사한 일', gAria: '감사 ', gDel: '번째 줄 지우기',
+      dTitle: '오늘의 일기', dPh: '오늘 있었던 일과 마음을 적어 보세요.', chars: '자',
+      vTitle: '오늘의 말씀', vHint: '일기를 쓴 뒤 말씀 받기를 누르면, 오늘 마음에 맞는 말씀을 보여드려요.',
+      vGet: '말씀 받기', vOther: '다른 말씀', vReading: '말씀을 고르는 중…', vNeed: '먼저 일기나 감사한 일을 조금 써 주세요.',
+      vNote: '일기에 쓴 낱말을 보고 미리 확인한 50구절(개역한글·KJV) 가운데 하나를 고릅니다. 일기 내용은 기기 밖으로 나가지 않습니다.',
+      vFallback: 'AI를 쓸 수 없는 화면이라 일기 속 낱말로 말씀을 골랐어요.', vDenied: 'AI 사용이 허용되지 않아 일기 속 낱말로 말씀을 골랐어요.',
+      vErr: '요청이 많아 잠시 쉬는 중입니다. 조금 뒤에 다시 눌러 주세요.', vSrc: '대한성서공회 원문 보기', vFeel: '오늘의 마음',
+      save: '저장', saveIdle: '쓰는 동안 자동으로 저장됩니다', saveLoaded: '저장된 기록을 불러왔어요', typing: '쓰는 중…', saving: '저장 중…',
+      saved: '저장됨 ', am: '오전 ', pm: '오후 ', saveErr: '저장하지 못했습니다. 저장을 다시 눌러 주세요.', quota: '저장 공간이 가득 찼습니다. 백업 후 오래된 기록을 지워 주세요.',
+      tTitleToday: '오늘 할 일', tTitleOther: (s) => s + ' 할 일', tPh: '할 일 적기', tAdd: '추가', tDateLabel: '날짜',
+      tEmpty: '아직 할 일이 없어요. 아래 줄에 적고 + 를 누르세요. 날짜를 바꾸면 앞으로 할 일도 미리 적을 수 있어요.',
+      tCarry: '어제 못 한 일 가져오기', tClear: '완료한 일 지우기', tDel: '지우기', tAllDone: '모두 끝냈어요', tLeft: (n, a) => a ? (a - n) + ' / ' + a + ' 완료' : '',
+      tCarried: (n) => n + '개를 가져왔어요.', tNoCarry: '어제 못 한 일이 없어요.', tAddedTo: (s) => s + '에 추가했어요.',
+      upTitle: '다가오는 할 일', upNone: '오늘 이후로 적어 둔 할 일이 없어요.', upCount: (n) => n + '개',
+      remToday: (n) => '오늘 할 일 ' + n + '개 남았어요', remDone: '오늘 할 일을 모두 끝냈어요', remNext: (d, s) => '다음: ' + d + ' · ' + s, remOnlyNext: (d) => '다가오는 할 일 · ' + d,
+      dTom: '내일', dToday: '오늘',
+      lgFull: '감사 3개 + 일기', lgPart: '일부', lgTodo: '할 일', calHint: '지난 날을 누르면 일기, 앞으로의 날을 누르면 할 일이 열립니다.',
+      searchPh: '감사·일기·할 일 검색', noFound: (q) => '"' + q + '" 이(가) 들어간 기록이 없어요.', noRec: '아직 기록이 없어요. 쓰기에서 감사한 일 세 가지로 시작해 보세요.',
+      grat: (n) => '감사 ' + n, todo: (d, a) => '할 일 ' + d + '/' + a, recallOf: (d) => d + '에 감사했던 일',
+      exTxt: '텍스트로 내보내기', exJson: '백업 파일 받기', imJson: '백업 불러오기', exNone: '내보낼 기록이 아직 없어요.',
+      exSaved: (n) => n + ' 파일을 저장했어요. 다운로드 폴더를 확인하세요.', exAsked: (n) => n + ' 저장을 요청했어요.', exDeclined: '저장을 취소했어요.', exFail: '파일을 저장하지 못했어요',
+      imBad: '백업 파일을 읽지 못했어요. 백업 파일 받기로 만든 파일인지 확인해 주세요.', imFmt: '백업 파일 형식이 아니에요.',
+      imDone: (n) => n + '일치 기록을 불러왔어요.', imNone: '새로 불러올 기록이 없었어요.', imStop: (n) => n + '일치를 불러온 뒤 멈췄어요. 다시 시도해 주세요.',
+      bConn: '저장소에 연결하는 중입니다. 이 문구가 계속 보이면 새로고침해 주세요.', bLoadErr: '기록을 불러오지 못했습니다. 새로고침해 주세요.',
+      bSignedOut: '일기는 이 기기의 브라우저에만 저장되고 어디에도 보내지 않습니다. 기기를 바꾸거나 브라우저 기록을 지우기 전에 모아보기에서 백업 파일을 받아 두세요.',
+      bNoAccess: '이 링크에서는 이 기기의 브라우저에만 저장됩니다(나만 볼 수 있음). 기기를 바꾸기 전에 모아보기에서 백업 파일을 받아 두세요.',
+      fileName: 'gratitude-journal', txtGrat: '감사', txtTodo: '[할 일]',
+      about: '이 일기장은 무료이며 회원가입이 없습니다. 기록은 이 기기의 브라우저에만 저장됩니다. 성경 본문: 개역한글(대한성서공회, 저작재산권 보호기간 만료), King James Version(공유 저작물).',
+    },
+    en: {
+      appName: 'Gratitude Journal', tabWrite: 'Write', tabTodo: 'To-do', tabCal: 'Calendar', tabList: 'Archive',
+      prevDay: 'Previous day', nextDay: 'Next day', goToday: 'Today', prevMonth: 'Previous month', nextMonth: 'Next month',
+      relToday: 'Today', relYest: 'Yesterday', relTom: 'Tomorrow', relPast: ' days ago', relFut: ' days ahead',
+      streak: (n) => '<b>' + n + '</b>-day streak', tot: (g, d) => g + ' gratitudes over ' + d + ' days',
+      gTitle: 'Grateful for', addG: '+ Add a line', gPh0: 'A warm cup of coffee this morning', gPh: 'Something good', gAria: 'Gratitude ', gDel: ': delete line',
+      dTitle: 'Journal', dPh: 'What happened today, and how did it feel?', chars: ' chars',
+      vTitle: "Today's verse", vHint: 'After writing, tap Get a verse for a passage that fits your day.',
+      vGet: 'Get a verse', vOther: 'Another verse', vReading: 'Choosing a verse…', vNeed: 'Write a little first.',
+      vNote: 'A verse is picked from a checked list of 50 (Korean Revised Version 1961 · KJV) based on words in your entry. Nothing leaves your device.',
+      vFallback: 'AI is not available here, so the verse was picked from words in your entry.', vDenied: 'AI is not allowed here, so the verse was picked from words in your entry.',
+      vErr: 'Too many requests right now. Try again in a moment.', vSrc: 'Korean source (Korean Bible Society)', vFeel: 'Today you seem',
+      save: 'Save', saveIdle: 'Saves automatically as you write', saveLoaded: 'Loaded your saved entry', typing: 'Writing…', saving: 'Saving…',
+      saved: 'Saved ', am: '', pm: '', saveErr: 'Could not save. Tap Save again.', quota: 'Storage is full. Download a backup and delete old entries.',
+      tTitleToday: "Today's to-do", tTitleOther: (s) => 'To-do · ' + s, tPh: 'Add a task', tAdd: 'Add', tDateLabel: 'Date',
+      tEmpty: 'No tasks yet. Type one below and tap +. Change the date to plan ahead.',
+      tCarry: "Bring over yesterday's unfinished", tClear: 'Clear completed', tDel: 'Delete', tAllDone: 'All done', tLeft: (n, a) => a ? (a - n) + ' of ' + a + ' done' : '',
+      tCarried: (n) => n + ' task(s) brought over.', tNoCarry: 'Nothing left unfinished yesterday.', tAddedTo: (s) => 'Added to ' + s + '.',
+      upTitle: 'Coming up', upNone: 'Nothing planned after today.', upCount: (n) => n + ' open',
+      remToday: (n) => n + ' task(s) left today', remDone: "Today's tasks are done", remNext: (d, s) => 'Next: ' + d + ' — ' + s, remOnlyNext: (d) => 'Coming up · ' + d,
+      dTom: 'Tomorrow', dToday: 'Today',
+      lgFull: '3 gratitudes + journal', lgPart: 'Partial', lgTodo: 'To-do', calHint: 'Tap a past day for its journal, a future day for its to-do list.',
+      searchPh: 'Search gratitude, journal, to-do', noFound: (q) => 'No entries with "' + q + '".', noRec: 'No entries yet. Start with three things in Write.',
+      grat: (n) => n + ' grateful', todo: (d, a) => d + '/' + a + ' tasks', recallOf: (d) => 'Grateful on ' + d,
+      exTxt: 'Export as text', exJson: 'Download backup', imJson: 'Restore backup', exNone: 'Nothing to export yet.',
+      exSaved: (n) => n + ' saved. Check your downloads folder.', exAsked: (n) => n + ' — download requested.', exDeclined: 'Download cancelled.', exFail: 'Could not save the file',
+      imBad: 'Could not read that file. Use a file from Download backup.', imFmt: 'This is not a backup file.',
+      imDone: (n) => n + ' day(s) restored.', imNone: 'Nothing new to restore.', imStop: (n) => n + ' day(s) restored, then stopped. Try again.',
+      bConn: 'Connecting to storage. If this stays, reload the page.', bLoadErr: 'Could not load your entries. Reload the page.',
+      bSignedOut: 'Entries stay in this browser only and are never sent anywhere. Download a backup from Archive before switching devices or clearing browser data.',
+      bNoAccess: 'With this link, entries stay in this browser only (private to you). Download a backup from Archive before switching devices.',
+      fileName: 'gratitude-journal', txtGrat: 'Grateful', txtTodo: '[To-do]',
+      about: 'Free, no sign-up. Entries are stored only in this browser. Scripture: Korean Revised Version 1961 (Korean Bible Society, copyright expired) and King James Version (public domain).',
+    },
+  };
+  const EMO = { '슬픔': 'sad', '걱정': 'worried', '화남': 'angry', '외로움': 'lonely', '지침': 'weary', '기쁨': 'joyful', '감사': 'thankful', '후회': 'regretful', '두려움': 'afraid', '소망': 'hopeful' };
+  let lang = 'ko';
+  try { const s = localStorage.getItem('gd-lang'); if (s === 'en' || s === 'ko') lang = s; } catch (e) {}
+  const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : v; };
+
+  // ---------- 날짜 ----------
+  const pad = (n) => String(n).padStart(2, '0');
+  const keyOf = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parseKey = (k) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (k, n) => { const d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); };
+  const todayKey = () => keyOf(new Date());
+  const diffDays = (a, b) => Math.round((parseKey(a) - parseKey(b)) / 86400000);
+  const DOW = { ko: ['일','월','화','수','목','금','토'], en: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] };
+  const DOWL = { ko: ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'], en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] };
+  const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const fmtLong = (k) => { const d = parseKey(k); return lang === 'ko' ? (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + DOW.ko[d.getDay()] + ')' : DOW.en[d.getDay()] + ', ' + MON[d.getMonth()].slice(0, 3) + ' ' + d.getDate(); };
+  const fmtFull = (k) => { const d = parseKey(k); return lang === 'ko' ? d.getFullYear() + '년 ' + fmtLong(k) : fmtLong(k) + ', ' + d.getFullYear(); };
+  const relLabel = (k) => {
+    const n = diffDays(k, todayKey());
+    if (n === 0) return t('relToday'); if (n === -1) return t('relYest'); if (n === 1) return t('relTom');
+    return Math.abs(n) + (n < 0 ? t('relPast') : t('relFut'));
+  };
+  const ddayLabel = (k) => { const n = diffDays(k, todayKey()); return n === 0 ? t('dToday') : n === 1 ? t('dTom') : 'D-' + n; };
+
+  // ---------- 상태 ----------
+  let entries = {};
+  let current = todayKey();
+  let gItems = ['', '', ''];
+  let todos = [];
+  let verse = null;
+  let dirty = false;
+  let loadedFor = null;
+  let calMonth = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+  let view = 'write';
+  let bannerKey = null;
+
+  // ---------- 저장소 ----------
+  const LS_KEY = 'gratitude-diary-v1';
+  const store = { mode: 'pending', col: null, unsub: null };
+  let readyResolve; const ready = new Promise((r) => { readyResolve = r; });
+  function lsRead() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function lsWrite(obj) { try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); return true; } catch (e) { return false; } }
+
+  async function initStore() {
+    const use = () => Promise.resolve(null);  // 공개판: 서버 저장 없음, 이 기기 브라우저에만 저장
+    let db = null, user = null, uid = null, canWrite = null;
+    try { db = await use('db'); } catch (e) {}
+    try { user = await use('user'); } catch (e) {}
+    try { uid = user ? await user.id() : null; } catch (e) {}
+    try { canWrite = user && user.can ? await user.can('data.write') : null; } catch (e) {}
+    if (db && uid && canWrite !== false) {
+      store.mode = 'db';
+      store.col = db.collection('data/users/' + uid);
+      const timer = setTimeout(() => showBanner('bConn'), 10000);
+      store.unsub = store.col.onSnapshot((snap) => {
+        if (!snap.metadata.fromCache) { clearTimeout(timer); if (bannerKey === 'bConn') hideBanner(); }
+        const next = {};
+        snap.docs.forEach((doc) => { const v = doc.data(); if (v) next[doc.id] = v; });
+        entries = next;
+        onData();
+      }, () => { clearTimeout(timer); showBanner('bLoadErr'); });
+    } else {
+      useLocal(db && uid ? 'bNoAccess' : 'bSignedOut');
+    }
+    readyResolve();
+  }
+  function useLocal(reason) {
+    if (store.unsub) { try { store.unsub(); } catch (e) {} store.unsub = null; }
+    store.mode = 'local';
+    entries = lsRead();
+    showBanner(reason);
+    onData();
+  }
+
+  let queue = Promise.resolve();
+  let pending = 0;
+  function persist(key, data) {
+    pending++;
+    queue = queue.catch(() => {}).then(async () => {
+      await ready;
+      const empty = !data.diary && !data.gratitude.length && !(data.todos || []).length && !data.verse;
+      if (store.mode === 'db') {
+        const ref = store.col.doc(key);
+        try { if (empty) await ref.delete(); else await ref.set(data); return; }
+        catch (e) {
+          if (!e || e.code !== 'invalid_argument') throw e;
+          const keep = entries; useLocal('bNoAccess');
+          lsWrite(Object.assign({}, keep, lsRead()));
+        }
+      }
+      const all = lsRead();
+      if (empty) delete all[key]; else all[key] = data;
+      if (!lsWrite(all)) throw { code: 'local_full' };
+      entries = all;
+    }).finally(() => { pending--; if (store.mode === 'local') onData(); });
+    return queue;
+  }
+  // 지금 열려 있지 않은 날짜의 할 일을 바꿀 때
+  function editOther(key, fn) {
+    const e = entries[key] || {};
+    const data = {
+      date: key,
+      gratitude: Array.isArray(e.gratitude) ? e.gratitude.slice() : [],
+      diary: e.diary || '',
+      todos: Array.isArray(e.todos) ? e.todos.map((x) => ({ t: x.t, d: !!x.d })) : [],
+      updatedAt: new Date().toISOString(),
+    };
+    if (e.verse) data.verse = e.verse;
+    fn(data);
+    entries[key] = data;   // 화면에 바로 반영
+    renderUpcoming(); renderReminder(); renderBadge();
+    return persist(key, data);
+  }
+
+  // ---------- 쓰기 ----------
+  function loadForm(key) {
+    const e = entries[key];
+    gItems = e && Array.isArray(e.gratitude) ? e.gratitude.slice() : [];
+    while (gItems.length < MIN) gItems.push('');
+    $('diary').value = e && e.diary ? e.diary : '';
+    todos = e && Array.isArray(e.todos) ? e.todos.map((x) => ({ t: String(x.t || ''), d: !!x.d })) : [];
+    verse = e && e.verse && VERSES[e.verse.id] ? Object.assign({}, e.verse) : null;
+    loadedFor = key; dirty = false;
+    $('tDate').value = key < todayKey() ? todayKey() : key;
+    renderDate(); renderGList(); updateCounts(); renderVerse(); renderTodos(); renderUpcoming(); renderReminder();
+    setSave(e ? 'saveLoaded' : 'saveIdle');
+  }
+
+  function renderDate() {
+    const d = parseKey(current);
+    $('dayNum').textContent = d.getDate();
+    $('dayWd').textContent = DOWL[lang][d.getDay()];
+    $('dayYm').textContent = lang === 'ko' ? d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월' : MON[d.getMonth()] + ' ' + d.getFullYear();
+    $('dayRel').textContent = relLabel(current);
+    $('goToday').hidden = current === todayKey();
+    $('nextDay').disabled = view === 'write' && current >= todayKey();
+  }
+
+  function renderWeek() {
+    const box = $('dots'); box.textContent = '';
+    const tk = todayKey();
+    for (let i = 6; i >= 0; i--) {
+      const k = addDays(tk, -i), e = entries[k];
+      const s = document.createElement('span');
+      if (e && (e.gratitude || []).length >= MIN) s.className = 'on';
+      if (i === 0) s.classList.add('today');
+      box.append(s);
+    }
+    const keys = Object.keys(entries);
+    let k = tk, streak = 0;
+    const ok = (x) => entries[x] && (entries[x].gratitude || []).length >= MIN;
+    if (!ok(k)) k = addDays(k, -1);
+    while (ok(k)) { streak++; k = addDays(k, -1); }
+    $('streakText').innerHTML = t('streak', streak);
+    const g = keys.reduce((s, x) => s + ((entries[x].gratitude || []).length), 0);
+    const days = keys.filter((x) => (entries[x].gratitude || []).length || entries[x].diary).length;
+    $('totText').textContent = t('tot', g, days);
+  }
+
+  function renderGList() {
+    const ol = $('glist'); ol.textContent = '';
+    gItems.forEach((val, i) => {
+      const li = document.createElement('li'); li.className = 'grow';
+      const n = document.createElement('span'); n.className = 'gnum'; n.textContent = i + 1;
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = 'g' + i; inp.value = val; inp.maxLength = 300; inp.className = 'line-input';
+      inp.placeholder = i === 0 ? t('gPh0') : t('gPh');
+      inp.setAttribute('aria-label', t('gAria') + (i + 1));
+      inp.addEventListener('input', () => { gItems[i] = inp.value; changed(); updateCounts(); });
+      inp.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' && !ev.isComposing) {
+          ev.preventDefault();
+          const nxt = $('g' + (i + 1));
+          if (nxt) nxt.focus(); else { gItems.push(''); renderGList(); $('g' + (i + 1)).focus(); }
+        }
+      });
+      li.append(n, inp);
+      if (gItems.length > MIN) {
+        const del = document.createElement('button'); del.className = 'del'; del.textContent = '×';
+        del.setAttribute('aria-label', (i + 1) + t('gDel'));
+        del.addEventListener('click', () => { gItems.splice(i, 1); renderGList(); changed(); updateCounts(); });
+        li.append(del);
+      } else li.append(document.createElement('span'));
+      ol.append(li);
+    });
+  }
+
+  function updateCounts() {
+    const n = gItems.filter((s) => s.trim()).length;
+    const gc = $('gCount');
+    gc.textContent = n >= MIN ? n + ' ✓' : n + ' / ' + MIN;
+    gc.classList.toggle('done', n >= MIN);
+    $('dCount').textContent = $('diary').value.trim().length.toLocaleString() + t('chars');
+  }
+
+  let saveKey = 'saveIdle', saveExtra = '', saveErr = false;
+  function setSave(key, extra, err) { saveKey = key; saveExtra = extra || ''; saveErr = !!err; paintSave(); }
+  function paintSave() { const s = $('saveState'); s.textContent = t(saveKey) + saveExtra; s.className = saveErr ? 'err' : ''; }
+
+  let timer = null;
+  function changed() { dirty = true; setSave('typing'); clearTimeout(timer); timer = setTimeout(saveNow, 1200); }
+
+  function saveNow() {
+    clearTimeout(timer);
+    if (!dirty) return queue;
+    const key = loadedFor || current;
+    const data = {
+      date: key,
+      gratitude: gItems.map((s) => s.trim()).filter(Boolean),
+      diary: $('diary').value.trim(),
+      todos: todos.filter((x) => x.t.trim()).map((x) => ({ t: x.t.trim(), d: !!x.d })),
+      updatedAt: new Date().toISOString(),
+    };
+    if (verse) data.verse = verse;
+    dirty = false;
+    setSave('saving');
+    return persist(key, data).then(() => {
+      const d = new Date(), h = d.getHours();
+      const time = lang === 'ko' ? (h < 12 ? t('am') : t('pm')) + ((h % 12) || 12) + ':' + pad(d.getMinutes())
+                                 : ((h % 12) || 12) + ':' + pad(d.getMinutes()) + (h < 12 ? ' AM' : ' PM');
+      setSave('saved', time);
+    }).catch((e) => {
+      dirty = true;
+      setSave(e && e.code === 'quota_exceeded' ? 'quota' : 'saveErr', '', true);
+    });
+  }
+
+  async function goDate(key) {
+    if (view === 'write' && key > todayKey()) return;
+    await saveNow();
+    current = key; loadForm(key);
+  }
+
+  // ---------- 할 일 알림 ----------
+  function openTodos(key) {
+    if (key === current) return todos;
+    const e = entries[key]; return e && Array.isArray(e.todos) ? e.todos : [];
+  }
+  function upcomingKeys() {
+    const tk = todayKey();
+    return Object.keys(entries).filter((k) => k > tk && (entries[k].todos || []).some((x) => !x.d)).sort();
+  }
+  function renderReminder() {
+    const tk = todayKey();
+    const box = $('remind');
+    if (current !== tk) { box.hidden = true; return; }
+    const tt = openTodos(tk), left = tt.filter((x) => !x.d).length;
+    const up = upcomingKeys();
+    if (!tt.length && !up.length) { box.hidden = true; return; }
+    $('remind1').textContent = tt.length ? (left ? t('remToday', left) : t('remDone')) : t('remOnlyNext', fmtLong(up[0]));
+    if (up.length) {
+      const k = up[0], first = entries[k].todos.find((x) => !x.d);
+      $('remind2').textContent = t('remNext', ddayLabel(k) + ' ' + fmtLong(k), first.t);
+      $('remind2').hidden = false;
+    } else $('remind2').hidden = true;
+    box.hidden = false;
+  }
+  function renderBadge() {
+    const left = openTodos(todayKey()).filter((x) => !x.d).length;
+    const b = $('todoBadge'); b.textContent = left; b.hidden = !left;
+  }
+
+  // ---------- 말씀 ----------
+  const KEYWORDS = {
+    '슬픔': ['슬프', '슬퍼', '울었', '눈물', '속상', '우울', '상처', '그립', '보고싶', '아프', 'sad', 'cry', 'tears', 'hurt', 'grief', 'miss'],
+    '걱정': ['걱정', '불안', '염려', '초조', '긴장', '고민', 'worr', 'anxi', 'nervous', 'stress'],
+    '화남': ['화가', '화났', '짜증', '분노', '억울', '열받', '답답', 'angry', 'mad', 'annoy', 'furious', 'frustrat'],
+    '외로움': ['외로', '혼자', '쓸쓸', '소외', 'lonely', 'alone', 'isolat'],
+    '지침': ['지쳤', '지친', '피곤', '힘들', '힘든', '버거', '무기력', '번아웃', 'tired', 'exhaust', 'weary', 'burn'],
+    '기쁨': ['기뻐', '기쁘', '행복', '신나', '즐거', '좋았', '웃었', 'happy', 'joy', 'glad', 'excit', 'fun'],
+    '후회': ['후회', '미안', '잘못', '실수', '자책', 'regret', 'sorry', 'mistake', 'guilt', 'fault'],
+    '두려움': ['두려', '무서', '겁나', '겁이', 'afraid', 'fear', 'scared', 'terrif'],
+    '감사': ['감사', '고마', 'thank', 'grateful'],
+  };
+  function pickFrom(emo, exceptId) {
+    let pool = VERSES.filter((v) => v.emo === emo && v.id !== exceptId);
+    if (!pool.length) pool = VERSES.filter((v) => v.id !== exceptId);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function pickByWords(text, exceptId) {
+    const low = text.toLowerCase(); let best = '소망', score = 0;
+    Object.keys(KEYWORDS).forEach((emo) => { const s = KEYWORDS[emo].reduce((n, w) => n + (low.includes(w) ? 1 : 0), 0); if (s > score) { score = s; best = emo; } });
+    return pickFrom(best, exceptId);
+  }
+
+  let verseHintKey = 'vHint';
+  function showVerseHint(k) { verseHintKey = k; const h = $('verseHint'); h.textContent = t(k); h.hidden = false; }
+
+  async function getVerse(another) {
+    const g = gItems.map((s) => s.trim()).filter(Boolean), d = $('diary').value.trim();
+    if (!g.length && !d) { showVerseHint('vNeed'); return; }
+    const btns = [$('getVerse'), $('otherVerse')];
+    btns.forEach((b) => { b.disabled = true; });
+    showVerseHint('vReading');
+    const exceptId = another && verse ? verse.id : -1;
+    let sample = null;
+    
+    let result = null, how = 'ai';
+    if (sample) {
+      const list = VERSES.filter((v) => v.id !== exceptId).map((v) => v.id + ' [' + v.emo + '] ' + v.refKo + ' ' + v.ko).join('\n');
+      const prompt = [
+        '당신은 그리스도인의 감사 일기를 읽고 마음을 헤아려 성경 말씀 하나를 골라 주는 따뜻한 동반자입니다.',
+        '아래 [말씀 목록]에서 오늘 일기의 마음에 가장 잘 맞는 말씀 하나의 번호만 고르세요. 목록에 없는 말씀을 만들거나 인용하지 마세요.',
+        '감정 분류는 다음 중 하나: 슬픔, 걱정, 화남, 외로움, 지침, 기쁨, 감사, 후회, 두려움, 소망. 여러 감정이 섞이면 가장 위로가 필요한 감정을 우선하세요.',
+        '그리고 일기 내용의 구체적인 부분을 짚어 공감하는 짧은 말(2~3문장)을 ' + (lang === 'ko' ? '한국어 존댓말로' : 'English, warm and plain,') + ' 쓰세요. 설교하거나 판단하거나 훈계하지 말고, 의학적 조언도 하지 마세요.',
+        '일기에 자해나 자살을 떠올리는 내용이 보이면, 공감과 함께 "혼자 견디지 말고 자살예방상담전화 109(24시간)에 전화해 주세요"라는 안내를 ' + (lang === 'ko' ? '' : '(in English, mentioning the Korean hotline 109, available 24 hours) ') + '꼭 넣으세요.',
+        '답은 JSON 하나로만: {"emotion": "감정", "verseId": 번호, "message": "공감의 말"}',
+        '', '[말씀 목록]', list, '', '[오늘의 감사 제목]', g.join('\n') || '(없음)', '', '[오늘의 일기]', d || '(없음)',
+      ].join('\n');
+      try {
+        const r = await sample.json(prompt, { modelTier: 'quick', cache: false });
+        const id = Number(r && r.verseId);
+        const v = VERSES.find((x) => x.id === id && x.id !== exceptId);
+        const emo = r && EMO[r.emotion] ? r.emotion : (v ? v.emo : null);
+        const msg = r && typeof r.message === 'string' ? r.message.trim().slice(0, 600) : '';
+        if (v) result = { id: v.id, emo: emo || v.emo, msg };
+        else if (emo) result = { id: pickFrom(emo, exceptId).id, emo, msg };
+      } catch (e) {
+        if (e && e.code === 'not_granted') how = 'denied';
+        else if (e && e.code === 'rate_limited') { showVerseHint('vErr'); btns.forEach((b) => { b.disabled = false; }); return; }
+        else how = 'fallback';
+      }
+    } else how = 'fallback';
+    if (!result) { const v = pickByWords(g.join('\n') + '\n' + d, exceptId); result = { id: v.id, emo: v.emo, msg: '' }; if (how === 'ai') how = 'fallback'; }
+    result.how = how;
+    verse = result;
+    btns.forEach((b) => { b.disabled = false; });
+    renderVerse(true);
+    dirty = true; saveNow();
+  }
+
+  function renderVerse(fresh) {
+    const body = $('verseBody');
+    if (!verse || !VERSES[verse.id]) {
+      body.hidden = true; $('otherVerse').hidden = true; $('getVerse').hidden = false;
+      showVerseHint('vHint'); return;
+    }
+    const v = VERSES[verse.id];
+    body.textContent = '';
+    const emo = document.createElement('span'); emo.className = 'vemo';
+    emo.textContent = t('vFeel') + ' · ' + (lang === 'ko' ? (verse.emo || v.emo) : (EMO[verse.emo || v.emo] || ''));
+    const main = document.createElement('p'); main.className = 'vmain'; main.textContent = lang === 'ko' ? v.ko : v.en;
+    const ref = document.createElement('p'); ref.className = 'vref';
+    const rb = document.createElement('b'); rb.textContent = lang === 'ko' ? v.refKo : v.refEn;
+    ref.append(rb, document.createTextNode(lang === 'ko' ? ', 개역한글' : ', KJV'));
+    const sub = document.createElement('p'); sub.className = 'vsub';
+    sub.textContent = (lang === 'ko' ? v.en + ' (' + v.refEn + ', KJV)' : v.ko + ' (' + v.refKo + ', 개역한글)');
+    body.append(emo, main, ref, sub);
+    if (verse.msg) { const m = document.createElement('p'); m.className = 'vmsg'; m.textContent = verse.msg; body.append(m); }
+    const a = document.createElement('a'); a.className = 'vlink'; a.href = v.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t('vSrc');
+    body.append(a);
+    body.hidden = false;
+    $('getVerse').hidden = true; $('otherVerse').hidden = false;
+    const sec = $('verseSec'); sec.classList.remove('fresh'); if (fresh) { void sec.offsetWidth; sec.classList.add('fresh'); }
+    $('verseHint').hidden = true;
+  }
+
+  // ---------- 할 일 ----------
+  function todoRow(item, onToggle, onDelete) {
+    const li = document.createElement('li'); li.className = 'trow' + (item.d ? ' done' : '');
+    const cb = document.createElement('button'); cb.className = 'check'; cb.setAttribute('role', 'checkbox');
+    cb.setAttribute('aria-checked', String(!!item.d)); cb.setAttribute('aria-label', item.t); cb.innerHTML = CHECK_SVG;
+    cb.addEventListener('click', onToggle);
+    const tx = document.createElement('span'); tx.className = 'ttext'; tx.textContent = item.t;
+    tx.addEventListener('click', onToggle);
+    const del = document.createElement('button'); del.className = 'del'; del.textContent = '×';
+    del.setAttribute('aria-label', item.t + ' ' + t('tDel'));
+    del.addEventListener('click', onDelete);
+    li.append(cb, tx, del);
+    return li;
+  }
+  function renderTodos() {
+    $('tTitle').textContent = current === todayKey() ? t('tTitleToday') : t('tTitleOther', fmtLong(current));
+    const ul = $('tlist'); ul.textContent = '';
+    todos.forEach((x, i) => {
+      ul.append(todoRow(x, () => { x.d = !x.d; renderTodos(); changed(); }, () => { todos.splice(i, 1); renderTodos(); changed(); }));
+    });
+    const done = todos.filter((x) => x.d).length;
+    const c = $('tCount');
+    c.textContent = todos.length && done === todos.length ? t('tAllDone') : t('tLeft', todos.length - done, todos.length);
+    c.classList.toggle('done', todos.length > 0 && done === todos.length);
+    $('tBar').style.width = todos.length ? Math.round(done / todos.length * 100) + '%' : '0';
+    $('tEmpty').hidden = todos.length > 0;
+    $('clearDone').disabled = done === 0;
+    $('carry').hidden = current < todayKey();
+    renderReminder(); renderBadge();
+  }
+  function addTodo(text, date) {
+    const s = text.trim(); if (!s) return;
+    const key = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : current;
+    if (key === current) {
+      if (todos.length >= 50) return;
+      todos.push({ t: s.slice(0, 200), d: false }); renderTodos(); changed(); $('tMsg').textContent = '';
+    } else {
+      editOther(key, (data) => { if (data.todos.length < 50) data.todos.push({ t: s.slice(0, 200), d: false }); })
+        .catch(() => setSave('saveErr', '', true));
+      $('tMsg').textContent = t('tAddedTo', fmtLong(key));
+    }
+  }
+  function carryOver() {
+    const prev = entries[addDays(current, -1)];
+    const left = prev && Array.isArray(prev.todos) ? prev.todos.filter((x) => !x.d && x.t) : [];
+    const have = new Set(todos.map((x) => x.t));
+    const add = left.filter((x) => !have.has(x.t));
+    add.forEach((x) => todos.push({ t: x.t, d: false }));
+    $('tMsg').textContent = add.length ? t('tCarried', add.length) : t('tNoCarry');
+    if (add.length) { renderTodos(); changed(); }
+  }
+  function renderUpcoming() {
+    const box = $('upList'); box.textContent = '';
+    const keys = upcomingKeys().filter((k) => k !== current);
+    let n = 0;
+    keys.forEach((k) => {
+      const list = entries[k].todos;
+      const grp = document.createElement('div'); grp.className = 'upgroup';
+      const head = document.createElement('button'); head.className = 'uphead';
+      const a = document.createElement('span'); a.textContent = fmtLong(k);
+      const b = document.createElement('span'); b.className = 'dday'; b.textContent = ddayLabel(k);
+      head.append(a, b);
+      head.addEventListener('click', () => goDate(k));
+      const ul = document.createElement('ul'); ul.className = 'tlist';
+      list.forEach((x, i) => {
+        if (x.d) return; n++;
+        ul.append(todoRow(x,
+          () => editOther(k, (data) => { if (data.todos[i]) data.todos[i].d = true; }).catch(() => setSave('saveErr', '', true)),
+          () => editOther(k, (data) => { data.todos.splice(i, 1); }).catch(() => setSave('saveErr', '', true))));
+      });
+      grp.append(head, ul); box.append(grp);
+    });
+    $('upCount').textContent = n ? t('upCount', n) : '';
+    if (!keys.length) { const p = document.createElement('p'); p.className = 'hint'; p.textContent = t('upNone'); box.append(p); }
+  }
+
+  // ---------- 달력 ----------
+  const isFull = (e) => e && (e.gratitude || []).length >= MIN && !!e.diary;
+  function renderCal() {
+    const y = calMonth.getFullYear(), m = calMonth.getMonth();
+    $('monthLabel').textContent = lang === 'ko' ? y + '년 ' + (m + 1) + '월' : MON[m] + ' ' + y;
+    const cal = $('cal'); cal.textContent = '';
+    DOW[lang].forEach((d, i) => { const el = document.createElement('div'); el.className = 'dow' + (i === 0 ? ' sun' : ''); el.textContent = d; cal.append(el); });
+    const first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate(), tk = todayKey();
+    for (let i = 0; i < first; i++) { const e = document.createElement('div'); e.className = 'day empty'; cal.append(e); }
+    for (let d = 1; d <= days; d++) {
+      const key = y + '-' + pad(m + 1) + '-' + pad(d), e = entries[key];
+      const b = document.createElement('button'); b.className = 'day';
+      if (e && ((e.gratitude || []).length || e.diary)) b.classList.add(isFull(e) ? 'full' : 'partial');
+      if (key === tk) b.classList.add('today');
+      if (key > tk) b.classList.add('future');
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = d;
+      const marks = document.createElement('span'); marks.className = 'marks';
+      if (e && (e.todos || []).length) { const i = document.createElement('i'); if (e.todos.every((x) => x.d)) i.className = 'all'; marks.append(i); }
+      b.append(n, marks);
+      b.setAttribute('aria-label', fmtFull(key));
+      b.addEventListener('click', () => { const v = key > tk ? 'todo' : 'write'; setView(v); goDate(key); });
+      cal.append(b);
+    }
+  }
+
+  // ---------- 모아보기 ----------
+  function renderList() {
+    const raw = $('search').value.trim(), q = raw.toLowerCase(), tk = todayKey();
+    const box = $('entries'); box.textContent = '';
+    const keys = Object.keys(entries).filter((k) => k <= tk).sort().reverse().filter((k) => {
+      if (!q) return true;
+      const e = entries[k];
+      return (e.diary || '').toLowerCase().includes(q) || (e.gratitude || []).some((g) => g.toLowerCase().includes(q)) || (e.todos || []).some((x) => (x.t || '').toLowerCase().includes(q));
+    });
+    if (!keys.length) { const em = document.createElement('p'); em.className = 'empty'; em.textContent = q ? t('noFound', raw) : t('noRec'); box.append(em); }
+    keys.forEach((k) => {
+      const e = entries[k];
+      const card = document.createElement('button'); card.className = 'entry';
+      const d = document.createElement('div'); d.className = 'd';
+      const tt = document.createElement('strong'); tt.textContent = fmtFull(k);
+      const c = document.createElement('span');
+      const parts = [t('grat', (e.gratitude || []).length)];
+      if ((e.todos || []).length) parts.push(t('todo', e.todos.filter((x) => x.d).length, e.todos.length));
+      c.textContent = parts.join(', ');
+      d.append(tt, c); card.append(d);
+      if ((e.gratitude || []).length) { const ol = document.createElement('ol'); e.gratitude.forEach((g) => { const li = document.createElement('li'); li.textContent = g; ol.append(li); }); card.append(ol); }
+      if (e.diary) { const p = document.createElement('p'); p.textContent = e.diary; card.append(p); }
+      if (e.verse && VERSES[e.verse.id]) { const v = VERSES[e.verse.id]; const s = document.createElement('span'); s.className = 'vtag'; s.textContent = lang === 'ko' ? v.refKo : v.refEn; card.append(s); }
+      card.addEventListener('click', () => { setView('write'); goDate(k); });
+      box.append(card);
+    });
+    const pool = [];
+    Object.keys(entries).forEach((k) => { if (k < tk) (entries[k].gratitude || []).forEach((g) => pool.push([k, g])); });
+    if (pool.length && !q) {
+      const [k, g] = pool[Math.floor(Math.random() * pool.length)];
+      const r = $('recall'); r.textContent = '';
+      const sm = document.createElement('small'); sm.textContent = t('recallOf', fmtFull(k));
+      r.append(sm, document.createTextNode(g));
+      $('recallBlock').hidden = false;
+    } else $('recallBlock').hidden = true;
+  }
+
+  // ---------- 내보내기 / 불러오기 ----------
+  async function exportFile(kind) {
+    await saveNow();
+    const keys = Object.keys(entries).sort(), msg = $('exportMsg');
+    if (!keys.length) { msg.textContent = t('exNone'); return; }
+    let data, name;
+    if (kind === 'json') { data = JSON.stringify(keys.map((k) => entries[k]), null, 2); name = t('fileName') + '_backup_' + todayKey() + '.json'; }
+    else {
+      data = keys.map((k) => {
+        const e = entries[k], lines = ['■ ' + fmtFull(k)];
+        (e.gratitude || []).forEach((g, i) => lines.push('  ' + t('txtGrat') + ' ' + (i + 1) + '. ' + g));
+        if (e.diary) lines.push('', e.diary);
+        if ((e.todos || []).length) { lines.push('', t('txtTodo')); e.todos.forEach((x) => lines.push('  ' + (x.d ? '☑ ' : '☐ ') + x.t)); }
+        if (e.verse && VERSES[e.verse.id]) { const v = VERSES[e.verse.id]; lines.push('', '✝ ' + v.refKo + ' ' + v.ko, '  ' + v.refEn + ' (KJV) ' + v.en); if (e.verse.msg) lines.push('  ' + e.verse.msg); }
+        return lines.join('\n') + '\n';
+      }).join('\n');
+      name = t('fileName') + '_' + todayKey() + '.txt';
+    }
+    try {
+      const blob = new Blob([data], { type: kind === 'json' ? 'application/json' : 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener'; document.body.append(a); a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 4000);
+      msg.textContent = t('exSaved', name);
+    } catch (e) { msg.textContent = t('exFail') + '.'; }
+  }
+  async function importFile(file) {
+    const msg = $('exportMsg'); let list;
+    try { list = JSON.parse(await file.text()); } catch (e) { msg.textContent = t('imBad'); return; }
+    if (!Array.isArray(list)) { msg.textContent = t('imFmt'); return; }
+    await saveNow();
+    let n = 0;
+    for (const e of list) {
+      if (!e || typeof e.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) continue;
+      const data = {
+        date: e.date,
+        gratitude: (Array.isArray(e.gratitude) ? e.gratitude : []).map((g) => String(g).trim().slice(0, 300)).filter(Boolean),
+        diary: String(e.diary || '').trim(),
+        todos: (Array.isArray(e.todos) ? e.todos : []).slice(0, 50).map((x) => ({ t: String((x && x.t) || '').trim().slice(0, 200), d: !!(x && x.d) })).filter((x) => x.t),
+        updatedAt: typeof e.updatedAt === 'string' ? e.updatedAt : new Date().toISOString(),
+      };
+      if (e.verse && Number.isInteger(e.verse.id) && VERSES[e.verse.id]) data.verse = { id: e.verse.id, emo: EMO[e.verse.emo] ? e.verse.emo : VERSES[e.verse.id].emo, msg: String(e.verse.msg || '').slice(0, 600), how: String(e.verse.how || 'ai').slice(0, 10) };
+      const old = entries[data.date];
+      if (old && (old.updatedAt || '') >= data.updatedAt) continue;
+      try { await persist(data.date, data); n++; } catch (err) { msg.textContent = t('imStop', n); return; }
+    }
+    msg.textContent = n ? t('imDone', n) : t('imNone');
+    loadForm(current);
+  }
+
+  // ---------- 공통 ----------
+  function showBanner(k) { bannerKey = k; const b = $('banner'); b.textContent = t(k); b.hidden = false; }
+  function hideBanner() { bannerKey = null; $('banner').hidden = true; }
+
+  function setView(v) {
+    view = v;
+    ['write', 'todo', 'cal', 'list'].forEach((n) => { $('view-' + n).hidden = n !== v; });
+    $('dayNav').hidden = !(v === 'write' || v === 'todo');
+    document.querySelectorAll('.tabbar button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.view === v)));
+    if (v === 'write' && current > todayKey()) { current = todayKey(); saveNow().then(() => loadForm(current)); }
+    if (v === 'cal' || v === 'list') saveNow();
+    renderDate();
+    if (v === 'cal') renderCal();
+    if (v === 'list') renderList();
+    window.scrollTo(0, 0);
+  }
+
+  function onData() {
+    renderWeek(); renderBadge();
+    const typing = document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+    if (!dirty && !pending && (loadedFor !== current || !typing)) loadForm(current);
+    else { renderUpcoming(); renderReminder(); }
+    if (view === 'cal') renderCal();
+    if (view === 'list') renderList();
+  }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.title = t('appName');
+    document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
+    document.querySelectorAll('[data-tp]').forEach((el) => { el.placeholder = t(el.dataset.tp); });
+    document.querySelectorAll('[data-ta]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.ta)); });
+    $('lang-ko').setAttribute('aria-pressed', String(lang === 'ko'));
+    $('lang-en').setAttribute('aria-pressed', String(lang === 'en'));
+    if (bannerKey) $('banner').textContent = t(bannerKey);
+    renderDate(); renderWeek(); renderGList(); updateCounts(); paintSave(); renderTodos(); renderUpcoming(); renderVerse();
+    if (verse && !$('verseHint').hidden) $('verseHint').textContent = t(verseHintKey);
+    if (view === 'cal') renderCal();
+    if (view === 'list') renderList();
+  }
+  function setLang(l) { lang = l; try { localStorage.setItem('gd-lang', l); } catch (e) {} applyLang(); }
+
+  // 이벤트
+  $('lang-ko').addEventListener('click', () => setLang('ko'));
+  $('lang-en').addEventListener('click', () => setLang('en'));
+  $('diary').addEventListener('input', () => { changed(); updateCounts(); });
+  $('addG').addEventListener('click', () => { gItems.push(''); renderGList(); updateCounts(); $('g' + (gItems.length - 1)).focus(); });
+  $('saveNow').addEventListener('click', () => { dirty = true; saveNow(); });
+  $('getVerse').addEventListener('click', () => getVerse(false));
+  $('otherVerse').addEventListener('click', () => getVerse(true));
+  $('remind').addEventListener('click', () => setView('todo'));
+  $('tForm').addEventListener('submit', (ev) => { ev.preventDefault(); addTodo($('tInput').value, $('tDate').value); $('tInput').value = ''; $('tInput').focus(); });
+  $('carry').addEventListener('click', carryOver);
+  $('clearDone').addEventListener('click', () => { todos = todos.filter((x) => !x.d); renderTodos(); changed(); });
+  $('prevDay').addEventListener('click', () => goDate(addDays(current, -1)));
+  $('nextDay').addEventListener('click', () => goDate(addDays(current, 1)));
+  $('goToday').addEventListener('click', () => goDate(todayKey()));
+  $('prevMonth').addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderCal(); });
+  $('nextMonth').addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderCal(); });
+  $('search').addEventListener('input', renderList);
+  $('exportTxt').addEventListener('click', () => exportFile('txt'));
+  $('exportJson').addEventListener('click', () => exportFile('json'));
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', (ev) => { const f = ev.target.files && ev.target.files[0]; if (f) importFile(f); ev.target.value = ''; });
+  document.querySelectorAll('.tabbar button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+  window.addEventListener('pagehide', () => { saveNow(); });
+
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  loadForm(current);
+  applyLang();
+  initStore();
+})();
+</script>
+</body>
+</html>
