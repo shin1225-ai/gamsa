@@ -90,6 +90,10 @@ h2 { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; margin: 0;
 .remind { margin-top: 16px; width: 100%; text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--olive-soft); }
 .remind .r1 { font-size: 0.92rem; font-weight: 500; }
 .remind .r2 { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+.bknag { margin-top: 16px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--olive); display: flex; flex-direction: column; gap: 8px; }
+.bknag .b1 { font-size: 0.92rem; font-weight: 600; margin: 0; }
+.bknag .b2 { font-size: 0.85rem; color: var(--muted); margin: 0; }
+.bknag .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
 /* 본문 블록 */
 .block { margin-top: 36px; display: flex; flex-direction: column; gap: 10px; }
@@ -237,6 +241,11 @@ h2 { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; margin: 0;
   </div>
 
   <p class="banner" id="banner" hidden></p>
+  <div class="bknag" id="bkNag" hidden role="status">
+    <p class="b1" id="bkTitle"></p>
+    <p class="b2" data-t="bkWhy"></p>
+    <div class="row"><button class="btn" id="bkNow" data-t="bkNow">지금 백업하기</button><button class="textbtn" id="bkLater" data-t="bkLater">나중에</button></div>
+  </div>
 
   <!-- 쓰기 -->
   <main id="view-write">
@@ -330,6 +339,7 @@ h2 { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; margin: 0;
         <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
       <p class="hint" id="exportMsg"></p>
+      <p class="hint" id="lastBk"></p>
     </div>
     <div class="block">
       <p class="hint" data-t="about"></p>
@@ -390,6 +400,9 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
       bSignedOut: '일기는 이 기기의 브라우저에만 저장되고 어디에도 보내지 않습니다. 기기를 바꾸거나 브라우저 기록을 지우기 전에 모아보기에서 백업 파일을 받아 두세요.',
       bNoAccess: '이 링크에서는 이 기기의 브라우저에만 저장됩니다(나만 볼 수 있음). 기기를 바꾸기 전에 모아보기에서 백업 파일을 받아 두세요.',
       fileName: 'gratitude-journal', txtGrat: '감사', txtTodo: '[할 일]',
+      bkNever: (n) => '첫 기록 후 ' + n + '일 동안 백업하지 않았어요', bkDays: (n) => '마지막 백업 후 ' + n + '일이 지났어요',
+      bkWhy: '휴대폰을 바꾸거나 브라우저 기록을 지우면 일기가 사라질 수 있어요. 백업 파일을 받아 메일이나 드라이브에 보관해 두세요.',
+      bkNow: '지금 백업하기', bkLater: '나중에', bkLast: (d) => '마지막 백업: ' + d, bkNone: '아직 백업한 적이 없어요.',
       about: '이 일기장은 무료이며 회원가입이 없습니다. 기록은 이 기기의 브라우저에만 저장됩니다. 성경 본문: 개역한글(대한성서공회, 저작재산권 보호기간 만료), King James Version(공유 저작물).',
     },
     en: {
@@ -424,6 +437,9 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
       bSignedOut: 'Entries stay in this browser only and are never sent anywhere. Download a backup from Archive before switching devices or clearing browser data.',
       bNoAccess: 'With this link, entries stay in this browser only (private to you). Download a backup from Archive before switching devices.',
       fileName: 'gratitude-journal', txtGrat: 'Grateful', txtTodo: '[To-do]',
+      bkNever: (n) => 'No backup in the ' + n + ' days since your first entry', bkDays: (n) => n + ' days since your last backup',
+      bkWhy: 'Entries can be lost if you switch phones or clear browser data. Download a backup and keep it in email or a drive.',
+      bkNow: 'Back up now', bkLater: 'Later', bkLast: (d) => 'Last backup: ' + d, bkNone: 'No backup yet.',
       about: 'Free, no sign-up. Entries are stored only in this browser. Scripture: Korean Revised Version 1961 (Korean Bible Society, copyright expired) and King James Version (public domain).',
     },
   };
@@ -946,6 +962,7 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
       const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener'; document.body.append(a); a.click();
       setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 4000);
       msg.textContent = t('exSaved', name);
+      if (kind === 'json') markBackup();
     } catch (e) { msg.textContent = t('exFail') + '.'; }
   }
   async function importFile(file) {
@@ -972,6 +989,25 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
     loadForm(current);
   }
 
+  // ---------- 백업 알림 ----------
+  const BK_DAYS = 30, SNOOZE_DAYS = 3;
+  const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  function markBackup() { lsSet('gd-lastBackup', todayKey()); renderBackup(); }
+  function renderBackup() {
+    const last = lsGet('gd-lastBackup');
+    const written = Object.keys(entries).filter((k) => k <= todayKey()).sort();
+    $('lastBk').textContent = last ? t('bkLast', fmtFull(last)) : (written.length ? t('bkNone') : '');
+    const nag = $('bkNag');
+    if (!written.length) { nag.hidden = true; return; }
+    const since = last || written[0];
+    const n = diffDays(todayKey(), since);
+    const snooze = lsGet('gd-backupSnooze');
+    if (n < BK_DAYS || (snooze && snooze > todayKey())) { nag.hidden = true; return; }
+    $('bkTitle').textContent = last ? t('bkDays', n) : t('bkNever', n);
+    nag.hidden = false;
+  }
+
   // ---------- 공통 ----------
   function showBanner(k) { bannerKey = k; const b = $('banner'); b.textContent = t(k); b.hidden = false; }
   function hideBanner() { bannerKey = null; $('banner').hidden = true; }
@@ -990,7 +1026,7 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
   }
 
   function onData() {
-    renderWeek(); renderBadge();
+    renderWeek(); renderBadge(); renderBackup();
     const typing = document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
     if (!dirty && !pending && (loadedFor !== current || !typing)) loadForm(current);
     else { renderUpcoming(); renderReminder(); }
@@ -1007,7 +1043,7 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
     $('lang-ko').setAttribute('aria-pressed', String(lang === 'ko'));
     $('lang-en').setAttribute('aria-pressed', String(lang === 'en'));
     if (bannerKey) $('banner').textContent = t(bannerKey);
-    renderDate(); renderWeek(); renderGList(); updateCounts(); paintSave(); renderTodos(); renderUpcoming(); renderVerse();
+    renderDate(); renderWeek(); renderGList(); updateCounts(); paintSave(); renderTodos(); renderUpcoming(); renderVerse(); renderBackup();
     if (verse && !$('verseHint').hidden) $('verseHint').textContent = t(verseHintKey);
     if (view === 'cal') renderCal();
     if (view === 'list') renderList();
@@ -1025,6 +1061,8 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
   $('remind').addEventListener('click', () => setView('todo'));
   $('tForm').addEventListener('submit', (ev) => { ev.preventDefault(); addTodo($('tInput').value, $('tDate').value); $('tInput').value = ''; $('tInput').focus(); });
   $('carry').addEventListener('click', carryOver);
+  $('bkNow').addEventListener('click', () => exportFile('json'));
+  $('bkLater').addEventListener('click', () => { lsSet('gd-backupSnooze', addDays(todayKey(), SNOOZE_DAYS)); renderBackup(); });
   $('clearDone').addEventListener('click', () => { todos = todos.filter((x) => !x.d); renderTodos(); changed(); });
   $('prevDay').addEventListener('click', () => goDate(addDays(current, -1)));
   $('nextDay').addEventListener('click', () => goDate(addDays(current, 1)));
