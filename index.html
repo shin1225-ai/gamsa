@@ -148,6 +148,7 @@ h2 { font-family: var(--serif); font-weight: 400; font-size: 1.35rem; margin: 0;
 .bknag .b2 { font-size: .85rem; color: var(--muted); margin: 0; }
 .bknag .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
+main { display: block; min-height: calc(100vh - 90px); }
 main.enter > * { animation: up .6s var(--ease) both; }
 main.enter > *:nth-child(2) { animation-delay: .06s; }
 main.enter > *:nth-child(3) { animation-delay: .12s; }
@@ -1185,7 +1186,12 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
     renderDate();
     if (v === 'cal') renderCal();
     if (v === 'list') renderList();
-    if (changedView) { const m = $('view-' + v); void m.offsetWidth; m.classList.add('enter'); window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' }); }
+    if (changedView) {
+      const m = $('view-' + v); void m.offsetWidth; m.classList.add('enter');
+      // 쓰기는 날짜가 보이는 맨 위, 나머지 탭은 내용이 바로 보이도록 그 자리로
+      const y = v === 'write' ? 0 : Math.max(0, m.getBoundingClientRect().top + window.scrollY - 8);
+      window.scrollTo({ top: y, behavior: REDUCED ? 'auto' : 'smooth' });
+    }
   }
 
   function onData() {
