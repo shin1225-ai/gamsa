@@ -209,6 +209,9 @@ main.enter > *:nth-child(5) { animation-delay: .24s; }
 
 /* 할 일 */
 .tlist { list-style: none; margin: 0; padding: 0; }
+.tnav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.navbtn.sm { width: 30px; height: 30px; background: transparent; backdrop-filter: none; }
+.navbtn.sm svg { width: 14px; height: 14px; }
 .trow { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-height: var(--line); border-bottom: 1px solid var(--rule); }
 .check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(243,236,220,.5); display: grid; place-items: center; transition: background .25s, border-color .25s, transform .25s var(--ease); }
 .check svg { width: 12px; height: 12px; opacity: 0; color: var(--night-deep); transition: opacity .2s; }
@@ -378,7 +381,15 @@ main.enter > *:nth-child(5) { animation-delay: .24s; }
   <!-- 할 일 -->
   <main id="view-todo" hidden>
     <div class="block">
-      <div class="bhead"><h2 id="tTitle"></h2><span class="count" id="tCount"></span></div>
+      <div class="bhead">
+        <div class="tnav">
+          <button class="navbtn sm" id="tPrev" data-ta="prevDay" aria-label="전날"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg></button>
+          <h2 id="tTitle"></h2>
+          <button class="navbtn sm" id="tNext" data-ta="nextDay" aria-label="다음날"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 3 5 5-5 5"/></svg></button>
+          <button class="textbtn" id="tToday" data-t="goToday" hidden>오늘로</button>
+        </div>
+        <span class="count" id="tCount"></span>
+      </div>
       <div class="progress" aria-hidden="true"><i id="tBar"></i></div>
       <ul class="tlist" id="tlist"></ul>
       <p class="hint" id="tEmpty" data-t="tEmpty">아직 할 일이 없어요.</p>
@@ -979,6 +990,7 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
   }
   function renderTodos() {
     $('tTitle').textContent = current === todayKey() ? t('tTitleToday') : t('tTitleOther', fmtLong(current));
+    $('tToday').hidden = current === todayKey();
     const ul = $('tlist'); ul.textContent = '';
     todos.forEach((x, i) => {
       ul.append(todoRow(x, () => { x.d = !x.d; renderTodos(); changed(); }, () => { todos.splice(i, 1); renderTodos(); changed(); }));
@@ -1232,6 +1244,9 @@ const VERSES = [{"id":0,"emo":"슬픔","ko":"여호와는 마음이 상한 자�
   $('carry').addEventListener('click', carryOver);
   $('bkNow').addEventListener('click', () => exportFile('json'));
   $('bkLater').addEventListener('click', () => { lsSet('gd-backupSnooze', addDays(todayKey(), SNOOZE_DAYS)); renderBackup(); });
+  $('tPrev').addEventListener('click', () => goDate(addDays(current, -1)));
+  $('tNext').addEventListener('click', () => goDate(addDays(current, 1)));
+  $('tToday').addEventListener('click', () => goDate(todayKey()));
   $('clearDone').addEventListener('click', () => { todos = todos.filter((x) => !x.d); renderTodos(); changed(); });
   $('prevDay').addEventListener('click', () => goDate(addDays(current, -1)));
   $('nextDay').addEventListener('click', () => goDate(addDays(current, 1)));
