@@ -24,7 +24,7 @@
 
 ## 성경 본문 출처
 - 한글: **개역한글**(대한성서공회). 공회 저작권 안내에 따르면 성경전서 개역한글판의 저작재산권 보호기간은 2011년 12월 31일 소멸했습니다. (https://www.bskorea.or.kr/bbs/content.php?co_id=subpage2_3_4_1 , 2026-11-26 확인)
-- 영어: **King James Version**(1769, 공유 저작물). 공개 데이터 2종을 글자 단위로 대조했습니다.
+- 영어: **Berean Standard Bible (BSB)**, 현대 영어 번역. 공식 사이트에 "dedicated to the public domain"(공유 저작물)이라고 밝혀져 있습니다. 공식 원문(https://bereanbible.com/bsb.txt)에서 가져와 공개 데이터와 대조했습니다. (2026-11-27 확인. 이전에는 King James Version을 썼으나 옛 영어라 읽기 어려워 변경)
 - 감정별 50구절 목록: [`verses.json`](verses.json)
 
 ## 그림 출처
